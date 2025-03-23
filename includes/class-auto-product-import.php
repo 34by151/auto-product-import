@@ -193,6 +193,7 @@ class Auto_Product_Import {
             'description' => '',
             'price' => '',
             'images' => array(),
+            'source_url' => $url,  // Include the source URL in the product data
         );
         
         // Try to get title (first look for product title, then fallback to page title)
@@ -277,9 +278,6 @@ class Auto_Product_Import {
                 }
             }
         }
-        
-        // Store the source URL
-        $product_data['source_url'] = $url;
         
         return $product_data;
     }
@@ -454,6 +452,272 @@ class Auto_Product_Import {
     }
 
     /**
+     * Extract additional product information from the description HTML.
+     *
+     * @since 1.0.0
+     * @param string $description_html The product description HTML.
+     * @param bool $debug Whether to enable debug mode.
+     * @return array An array of additional product information.
+     */
+    private function extract_additional_product_info($description_html, $debug = false) {
+        // Fields to extract (matching the ones shown in the screenshot)
+        $fields_to_extract = array(
+            'Caliber',
+            'Power Source',
+            'Velocity',
+            'Magazine Capacity',
+            'Action',
+            'Frame Material',
+            'Barrel',
+            'Accessory Rail',
+            'Finish',
+            'Intended Use',
+            'Length',
+            'Safety',
+            'Sights',
+            'Trigger',
+            'Weight'
+        );
+        
+        // Field variations/aliases (some sites use different terms for the same field)
+        $field_variations = array(
+            'Magazine Capacity' => array('Capacity', 'Mag Capacity', 'Mag. Capacity', 'Magazine Size'),
+            'Frame Material' => array('Frame', 'Material', 'Construction'),
+            'Accessory Rail' => array('Rail', 'Rails', 'Accessory', 'Rail Type'),
+            'Intended Use' => array('Use', 'Purpose', 'Application'),
+            'Power Source' => array('Power', 'Power Type', 'Source'),
+            'Barrel' => array('Barrel Length', 'Barrel Size', 'Barrel Details', 'Barrel Specs'),
+            'Action' => array('Action Type', 'Operating System'),
+            'Finish' => array('Finish Type', 'Surface Finish', 'Color'),
+            'Sights' => array('Sight', 'Sight System', 'Sight Type'),
+            'Trigger' => array('Trigger Type', 'Trigger System', 'Trigger Pull'),
+            'Weight' => array('Gun Weight', 'Product Weight', 'Total Weight'),
+            'Safety' => array('Safety Type', 'Safety System', 'Safety Features'),
+            'Length' => array('Overall Length', 'Total Length', 'Gun Length')
+        );
+        
+        $additional_info = array();
+        
+        if ($debug) {
+            error_log('Starting extraction of additional product information from HTML...');
+            error_log('HTML content length: ' . strlen($description_html) . ' characters');
+        }
+        
+        // Step 1: Look for schema.org formatted data with DOMDocument (for structured data)
+        $dom = new DOMDocument();
+        libxml_use_internal_errors(true);
+        @$dom->loadHTML('<div>' . $description_html . '</div>');
+        libxml_clear_errors();
+        $xpath = new DOMXPath($dom);
+        
+        foreach ($fields_to_extract as $field) {
+            // Skip if we already found this field
+            if (isset($additional_info[$field])) {
+                continue;
+            }
+            
+            // Convert field name to lowercase for case-insensitive matching
+            $field_lower = strtolower($field);
+            
+            // Try to find the field in schema.org formatted list items
+            $nodes = $xpath->query('//li[.//span[translate(normalize-space(text()), "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz") = "' . $field_lower . '"]]');
+            
+            if ($nodes && $nodes->length > 0) {
+                $value_nodes = $xpath->query('.//span[@itemprop="value"]', $nodes->item(0));
+                if ($value_nodes && $value_nodes->length > 0) {
+                    $additional_info[$field] = trim($value_nodes->item(0)->textContent);
+                    if ($debug) {
+                        error_log("Found '$field' via schema.org format: " . $additional_info[$field]);
+                    }
+                    continue;
+                }
+            }
+            
+            // Try variations of the field name
+            if (isset($field_variations[$field])) {
+                foreach ($field_variations[$field] as $variation) {
+                    $variation_lower = strtolower($variation);
+                    $nodes = $xpath->query('//li[.//span[translate(normalize-space(text()), "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz") = "' . $variation_lower . '"]]');
+                    
+                    if ($nodes && $nodes->length > 0) {
+                        $value_nodes = $xpath->query('.//span[@itemprop="value"]', $nodes->item(0));
+                        if ($value_nodes && $value_nodes->length > 0) {
+                            $additional_info[$field] = trim($value_nodes->item(0)->textContent);
+                            if ($debug) {
+                                error_log("Found '$field' via schema.org format (variation '$variation'): " . $additional_info[$field]);
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Step 2: Direct regex pattern matching on the HTML (this works for both structured and unstructured data)
+        foreach ($fields_to_extract as $field) {
+            // Skip if we already found this field
+            if (isset($additional_info[$field])) {
+                continue;
+            }
+            
+            // Look for <li>Field: Value</li> pattern
+            $pattern = '/<li[^>]*>\s*' . preg_quote($field, '/') . '\s*:\s*([^<]+)<\/li>/i';
+            if (preg_match($pattern, $description_html, $matches)) {
+                $additional_info[$field] = trim($matches[1]);
+                if ($debug) {
+                    error_log("Found '$field' via direct HTML regex pattern: " . $additional_info[$field]);
+                }
+                continue;
+            }
+            
+            // Also try with different spacing
+            $pattern = '/<li[^>]*>\s*' . preg_quote($field, '/') . '\s*:([^<]+)<\/li>/i';
+            if (preg_match($pattern, $description_html, $matches)) {
+                $additional_info[$field] = trim($matches[1]);
+                if ($debug) {
+                    error_log("Found '$field' via alternate HTML regex pattern: " . $additional_info[$field]);
+                }
+                continue;
+            }
+            
+            // Try direct text extraction with any separator
+            $separators = array(':', '-', '–', '=', '|');
+            foreach ($separators as $separator) {
+                $pattern = '/<li[^>]*>\s*' . preg_quote($field, '/') . '\s*' . preg_quote($separator, '/') . '\s*([^<]+)<\/li>/i';
+                if (preg_match($pattern, $description_html, $matches)) {
+                    $additional_info[$field] = trim($matches[1]);
+                    if ($debug) {
+                        error_log("Found '$field' via direct HTML regex with separator '$separator': " . $additional_info[$field]);
+                    }
+                    break;
+                }
+            }
+            
+            // Try variations with direct regex pattern
+            if (!isset($additional_info[$field]) && isset($field_variations[$field])) {
+                foreach ($field_variations[$field] as $variation) {
+                    // Look for <li>Variation: Value</li> pattern
+                    $pattern = '/<li[^>]*>\s*' . preg_quote($variation, '/') . '\s*:\s*([^<]+)<\/li>/i';
+                    if (preg_match($pattern, $description_html, $matches)) {
+                        $additional_info[$field] = trim($matches[1]);
+                        if ($debug) {
+                            error_log("Found '$field' via direct HTML regex pattern with variation '$variation': " . $additional_info[$field]);
+                        }
+                        break;
+                    }
+                    
+                    // Try other separators for variations
+                    foreach ($separators as $separator) {
+                        $pattern = '/<li[^>]*>\s*' . preg_quote($variation, '/') . '\s*' . preg_quote($separator, '/') . '\s*([^<]+)<\/li>/i';
+                        if (preg_match($pattern, $description_html, $matches)) {
+                            $additional_info[$field] = trim($matches[1]);
+                            if ($debug) {
+                                error_log("Found '$field' via direct HTML regex with variation '$variation' and separator '$separator': " . $additional_info[$field]);
+                            }
+                            break 2;
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Step 3: Look for table-based data
+        foreach ($fields_to_extract as $field) {
+            // Skip if we already found this field
+            if (isset($additional_info[$field])) {
+                continue;
+            }
+            
+            // Convert field name to lowercase for case-insensitive matching
+            $field_lower = strtolower($field);
+            
+            // Look for table rows with field name in first column
+            $nodes = $xpath->query('//tr[./td[1][contains(translate(normalize-space(text()), "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz"), "' . $field_lower . '")]]');
+            if ($nodes && $nodes->length > 0) {
+                $value_nodes = $xpath->query('./td[2]', $nodes->item(0));
+                if ($value_nodes && $value_nodes->length > 0) {
+                    $additional_info[$field] = trim($value_nodes->item(0)->textContent);
+                    if ($debug) {
+                        error_log("Found '$field' via table row: " . $additional_info[$field]);
+                    }
+                    continue;
+                }
+            }
+            
+            // Try variations for table rows
+            if (isset($field_variations[$field])) {
+                foreach ($field_variations[$field] as $variation) {
+                    $variation_lower = strtolower($variation);
+                    $nodes = $xpath->query('//tr[./td[1][contains(translate(normalize-space(text()), "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz"), "' . $variation_lower . '")]]');
+                    if ($nodes && $nodes->length > 0) {
+                        $value_nodes = $xpath->query('./td[2]', $nodes->item(0));
+                        if ($value_nodes && $value_nodes->length > 0) {
+                            $additional_info[$field] = trim($value_nodes->item(0)->textContent);
+                            if ($debug) {
+                                error_log("Found '$field' via table row with variation '$variation': " . $additional_info[$field]);
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Step 4: Last resort - look through all list items for any text that matches our field patterns
+        if (count($additional_info) < count($fields_to_extract)) {
+            $li_nodes = $xpath->query('//li');
+            if ($li_nodes && $li_nodes->length > 0) {
+                foreach ($li_nodes as $li_node) {
+                    $li_text = trim($li_node->textContent);
+                    
+                    foreach ($fields_to_extract as $field) {
+                        // Skip if we already found this field
+                        if (isset($additional_info[$field])) {
+                            continue;
+                        }
+                        
+                        // Direct match for field at start of text
+                        if (stripos($li_text, $field . ':') === 0) {
+                            $parts = explode(':', $li_text, 2);
+                            if (count($parts) === 2) {
+                                $additional_info[$field] = trim($parts[1]);
+                                if ($debug) {
+                                    error_log("Found '$field' via direct list item text extraction: " . $additional_info[$field]);
+                                }
+                            }
+                        }
+                        
+                        // Check variations too
+                        if (!isset($additional_info[$field]) && isset($field_variations[$field])) {
+                            foreach ($field_variations[$field] as $variation) {
+                                if (stripos($li_text, $variation . ':') === 0) {
+                                    $parts = explode(':', $li_text, 2);
+                                    if (count($parts) === 2) {
+                                        $additional_info[$field] = trim($parts[1]);
+                                        if ($debug) {
+                                            error_log("Found '$field' via direct list item text extraction with variation '$variation': " . $additional_info[$field]);
+                                        }
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        if ($debug) {
+            error_log('Completed extraction of additional product information.');
+            error_log('Found ' . count($additional_info) . ' fields: ' . implode(', ', array_keys($additional_info)));
+            error_log('Missing ' . (count($fields_to_extract) - count($additional_info)) . ' fields: ' . 
+                implode(', ', array_diff($fields_to_extract, array_keys($additional_info))));
+        }
+        
+        return $additional_info;
+    }
+
+    /**
      * Stub method to avoid errors from old code that might still be calling this
      * This method was replaced by regex-based HTML cleaning
      *
@@ -486,6 +750,29 @@ class Auto_Product_Import {
         // Set product description - ensure HTML is preserved
         if (!empty($product_data['description'])) {
             $product->set_description($product_data['description']);
+            
+            // Extract additional product information from the description
+            $debug_mode = apply_filters('auto_product_import_debug_mode', false);
+            $additional_info = $this->extract_additional_product_info($product_data['description'], $debug_mode);
+            
+            // Add the additional information as product attributes
+            if (!empty($additional_info)) {
+                $attributes = array();
+                
+                foreach ($additional_info as $name => $value) {
+                    if (!empty($value)) {
+                        $attribute = new WC_Product_Attribute();
+                        $attribute->set_name($name);
+                        $attribute->set_options(array($value));
+                        $attribute->set_visible(true);
+                        $attributes[] = $attribute;
+                    }
+                }
+                
+                if (!empty($attributes)) {
+                    $product->set_attributes($attributes);
+                }
+            }
         }
         
         // Set product status
@@ -626,5 +913,17 @@ class Auto_Product_Import {
         
         // Return the buffer contents
         return ob_get_clean();
+    }
+
+    /**
+     * Public wrapper function for extract_additional_product_info to use in tests
+     * 
+     * @since 1.0.0
+     * @param string $description_html The product description HTML.
+     * @param bool $debug Whether to enable debug mode.
+     * @return array An array of additional product information.
+     */
+    public function get_additional_product_info($description_html, $debug = false) {
+        return $this->extract_additional_product_info($description_html, $debug);
     }
 } 

@@ -1,0 +1,69 @@
+<h1>Test 1: Original Cleaned Description</h1><strong>Starting extraction of additional product information from HTML...</strong><br><strong>HTML content length: 2674 characters</strong><br>Found 'Caliber' via schema.org format: 5.56x45mm<br>Found 'Magazine Capacity' via schema.org format (variation 'Capacity'): 60 Rounds<br><br><strong>Completed extraction of additional product information.</strong><br>Found 2 fields: Caliber, Magazine Capacity<br>Missing 13 fields: Power Source, Velocity, Action, Frame Material, Barrel, Accessory Rail, Finish, Intended Use, Length, Safety, Sights, Trigger, Weight<br><br><pre>Found 2 additional information fields:
+
+Array
+(
+    [Caliber] => 5.56x45mm
+    [Magazine Capacity] => 60 Rounds
+)
+</pre><table border='1' cellpadding='5' cellspacing='0'><tr><th>Name</th><th>Value</th></tr><tr><td>Caliber</td><td>5.56x45mm</td></tr><tr><td>Magazine Capacity</td><td>60 Rounds</td></tr></table><h2>HTML Content for Debugging (First 500 chars)</h2><pre>&lt;div class=&quot;tab-content is-active&quot; id=&quot;tab-description&quot;&gt;
+        ATI Alpha Maxx Semi-Automatic AR-15 Pistol has been engineered for performance and reliability. Featuring a 7.5&quot; barrel and ATI&#039;s new M-Lok hand-guard. The metal-reinforced polymer receiver provides durability and lightweight handling. Complete with 60 rd magazine and a set of Flip Up Sights. 
+&lt;br&gt;
+&lt;br&gt;The Alpha Maxx lower features a patented hammer and trigger pin retainment system, preventing movement from the hammer and trigg
+...
+</pre><h1>Test 2: Enhanced Test Description</h1><strong>Starting extraction of additional product information from HTML...</strong><br><strong>HTML content length: 3946 characters</strong><br>Found 'Caliber' via schema.org format: 5.56x45mm<br>Found 'Power Source' via direct list item matching with separator ':': CO2 Pneumatic<br>Found 'Velocity' via direct list item matching with separator ':': Up to 400 fps<br>Found 'Magazine Capacity' via schema.org format (variation 'Capacity'): 60 Rounds<br><br><strong>Completed extraction of additional product information.</strong><br>Found 4 fields: Caliber, Power Source, Velocity, Magazine Capacity<br>Missing 11 fields: Action, Frame Material, Barrel, Accessory Rail, Finish, Intended Use, Length, Safety, Sights, Trigger, Weight<br><br><pre>Found 4 additional information fields:
+
+Array
+(
+    [Caliber] => 5.56x45mm
+    [Power Source] => CO2 Pneumatic
+    [Velocity] => Up to 400 fps
+    [Magazine Capacity] => 60 Rounds
+)
+</pre><table border='1' cellpadding='5' cellspacing='0'><tr><th>Name</th><th>Value</th></tr><tr><td>Caliber</td><td>5.56x45mm</td></tr><tr><td>Power Source</td><td>CO2 Pneumatic</td></tr><tr><td>Velocity</td><td>Up to 400 fps</td></tr><tr><td>Magazine Capacity</td><td>60 Rounds</td></tr></table><h2>HTML Content for Debugging (Full)</h2><pre>&lt;!-- TEST123 --&gt;
+&lt;div class=&quot;tab-content is-active&quot; id=&quot;tab-description&quot;&gt;
+        &lt;p&gt;ATI Alpha Maxx Semi-Automatic AR-15 Pistol has been engineered for performance and reliability. Featuring a 7.5&quot; barrel and ATI&#039;s new M-Lok hand-guard. The metal-reinforced polymer receiver provides durability and lightweight handling. Complete with 60 rd magazine and a set of Flip Up Sights.&lt;/p&gt;
+        
+        &lt;p&gt;The Alpha Maxx lower features a patented hammer and trigger pin retainment system, preventing movement from the hammer and trigger pin during firing and also features ATI&#039;s patented over-molded metal insert, which reinforces the buffer tube housing and rear takedown pin. This allows for metal-on-metal contact with both the buffer tube as well as the rear takedown pin thus increasing strength and durability from recoil and consistent firing. This particular model comes in a popular all black with a manually adjustable Blade Style Brace installed.&lt;/p&gt;
+        
+        &lt;h3&gt;Specifications&lt;/h3&gt;
+        &lt;ul&gt;
+            &lt;li itemprop=&quot;additionalProperty&quot; itemscope itemtype=&quot;https://schema.org/PropertyValue&quot;&gt;&lt;span itemprop=&quot;name&quot;&gt;Brand&lt;/span&gt; : &lt;span itemprop=&quot;value&quot;&gt;ATI&lt;/span&gt;&lt;/li&gt;
+            &lt;li itemprop=&quot;additionalProperty&quot; itemscope itemtype=&quot;https://schema.org/PropertyValue&quot;&gt;&lt;span itemprop=&quot;name&quot;&gt;Category&lt;/span&gt; : &lt;span itemprop=&quot;value&quot;&gt;Tactical Pistols&lt;/span&gt;&lt;/li&gt;
+            &lt;li itemprop=&quot;additionalProperty&quot; itemscope itemtype=&quot;https://schema.org/PropertyValue&quot;&gt;&lt;span itemprop=&quot;name&quot;&gt;Model&lt;/span&gt; : &lt;span itemprop=&quot;value&quot;&gt;Alpha Maxx&lt;/span&gt;&lt;/li&gt;
+            &lt;li itemprop=&quot;additionalProperty&quot; itemscope itemtype=&quot;https://schema.org/PropertyValue&quot;&gt;&lt;span itemprop=&quot;name&quot;&gt;Caliber&lt;/span&gt; : &lt;span itemprop=&quot;value&quot;&gt;5.56x45mm&lt;/span&gt;&lt;/li&gt;
+            &lt;li itemprop=&quot;additionalProperty&quot; itemscope itemtype=&quot;https://schema.org/PropertyValue&quot;&gt;&lt;span itemprop=&quot;name&quot;&gt;Barrel Length Range&lt;/span&gt; : &lt;span itemprop=&quot;value&quot;&gt;7&quot; to 7.99&quot;&lt;/span&gt;&lt;/li&gt;
+            &lt;li itemprop=&quot;additionalProperty&quot; itemscope itemtype=&quot;https://schema.org/PropertyValue&quot;&gt;&lt;span itemprop=&quot;name&quot;&gt;Capacity&lt;/span&gt; : &lt;span itemprop=&quot;value&quot;&gt;60 Rounds&lt;/span&gt;&lt;/li&gt;
+            &lt;li itemprop=&quot;additionalProperty&quot; itemscope itemtype=&quot;https://schema.org/PropertyValue&quot;&gt;&lt;span itemprop=&quot;name&quot;&gt;Color&lt;/span&gt; : &lt;span itemprop=&quot;value&quot;&gt;Black&lt;/span&gt;&lt;/li&gt;
+            &lt;li itemprop=&quot;additionalProperty&quot; itemscope itemtype=&quot;https://schema.org/PropertyValue&quot;&gt;&lt;span itemprop=&quot;name&quot;&gt;Frame Material&lt;/span&gt; : &lt;span itemprop=&quot;value&quot;&gt;Polymer&lt;/span&gt;&lt;/li&gt;
+            &lt;li itemprop=&quot;additionalProperty&quot; itemscope itemtype=&quot;https://schema.org/PropertyValue&quot;&gt;&lt;span itemprop=&quot;name&quot;&gt;Handguards&lt;/span&gt; : &lt;span itemprop=&quot;value&quot;&gt;7.50&quot; M-Lok&lt;/span&gt;&lt;/li&gt;
+            &lt;li itemprop=&quot;additionalProperty&quot; itemscope itemtype=&quot;https://schema.org/PropertyValue&quot;&gt;&lt;span itemprop=&quot;name&quot;&gt;Barrel Length&lt;/span&gt; : &lt;span itemprop=&quot;value&quot;&gt;7.50&quot;&lt;/span&gt;&lt;/li&gt;
+        &lt;/ul&gt;
+        
+        &lt;h3&gt;Additional Features&lt;/h3&gt;
+        &lt;ul&gt;
+            &lt;li&gt;Power Source: CO2 Pneumatic&lt;/li&gt;
+            &lt;li&gt;Velocity: Up to 400 fps&lt;/li&gt;
+            &lt;li&gt;Action: Semi-Automatic with Blowback&lt;/li&gt;
+            &lt;li&gt;Barrel: Smooth Bore, 4.5 inches&lt;/li&gt;
+            &lt;li&gt;Accessory Rail: Picatinny Underbarrel&lt;/li&gt;
+            &lt;li&gt;Finish: Matte Black or Stainless Steel&lt;/li&gt;
+            &lt;li&gt;Intended Use: Target Shooting, Training, Plinking&lt;/li&gt;
+            &lt;li&gt;Length: 7.5 inches (19 cm)&lt;/li&gt;
+            &lt;li&gt;Safety: Manual, Ambidextrous&lt;/li&gt;
+            &lt;li&gt;Sights: Fixed Front, Adjustable Rear&lt;/li&gt;
+            &lt;li&gt;Trigger: Double/Single Action&lt;/li&gt;
+            &lt;li&gt;Weight: 1.8 lbs (approx. 816 grams)&lt;/li&gt;
+        &lt;/ul&gt;
+        
+        &lt;table class=&quot;specifications&quot;&gt;
+            &lt;tr&gt;
+                &lt;td&gt;Barrel Material&lt;/td&gt;
+                &lt;td&gt;Stainless Steel&lt;/td&gt;
+            &lt;/tr&gt;
+            &lt;tr&gt;
+                &lt;td&gt;Rail Type&lt;/td&gt;
+                &lt;td&gt;Picatinny/M-Lok Combo&lt;/td&gt;
+            &lt;/tr&gt;
+        &lt;/table&gt;
+    &lt;/div&gt;
+&lt;!-- TEST123 --&gt; </pre><h2>Debug List Items</h2><p>Found 22 list items</p><ol><li><strong>List item #1:</strong> Brand : ATI</li><li><strong>List item #2:</strong> Category : Tactical Pistols</li><li><strong>List item #3:</strong> Model : Alpha Maxx</li><li><strong>List item #4:</strong> Caliber : 5.56x45mm</li><li><strong>List item #5:</strong> Barrel Length Range : 7&quot; to 7.99&quot;</li> - <span style='color: red;'>Contains 'Barrel' at start!</span><li><strong>List item #6:</strong> Capacity : 60 Rounds</li><li><strong>List item #7:</strong> Color : Black</li><li><strong>List item #8:</strong> Frame Material : Polymer</li><li><strong>List item #9:</strong> Handguards : 7.50&quot; M-Lok</li><li><strong>List item #10:</strong> Barrel Length : 7.50&quot;</li> - <span style='color: red;'>Contains 'Barrel' at start!</span><li><strong>List item #11:</strong> Power Source: CO2 Pneumatic</li><li><strong>List item #12:</strong> Velocity: Up to 400 fps</li><li><strong>List item #13:</strong> Action: Semi-Automatic with Blowback</li> - <span style='color: red;'>Contains 'Action' at start!</span><li><strong>List item #14:</strong> Barrel: Smooth Bore, 4.5 inches</li> - <span style='color: red;'>Contains 'Barrel' at start!</span><li><strong>List item #15:</strong> Accessory Rail: Picatinny Underbarrel</li> - <span style='color: red;'>Contains 'Accessory Rail' at start!</span><li><strong>List item #16:</strong> Finish: Matte Black or Stainless Steel</li> - <span style='color: red;'>Contains 'Finish' at start!</span><li><strong>List item #17:</strong> Intended Use: Target Shooting, Training, Plinking</li> - <span style='color: red;'>Contains 'Intended Use' at start!</span><li><strong>List item #18:</strong> Length: 7.5 inches (19 cm)</li> - <span style='color: red;'>Contains 'Length' at start!</span><li><strong>List item #19:</strong> Safety: Manual, Ambidextrous</li> - <span style='color: red;'>Contains 'Safety' at start!</span><li><strong>List item #20:</strong> Sights: Fixed Front, Adjustable Rear</li> - <span style='color: red;'>Contains 'Sights' at start!</span><li><strong>List item #21:</strong> Trigger: Double/Single Action</li> - <span style='color: red;'>Contains 'Trigger' at start!</span><li><strong>List item #22:</strong> Weight: 1.8 lbs (approx. 816 grams)</li> - <span style='color: red;'>Contains 'Weight' at start!</span></ol><p>Test completed successfully!</p>
