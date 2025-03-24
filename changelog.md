@@ -12,16 +12,19 @@ All notable changes to the Auto Product Import plugin will be documented in this
 - DOM-safe wrapper methods for getAttribute and hasAttribute
 - Comprehensive testing scripts for image extraction
 - Detailed documentation of image extraction improvements
+- Detection and filtering of images from "Related Products" sections
 
 ### Fixed
 - Resolved issue with extracting only one product image instead of all available images
 - Fixed DOM method errors with getAttribute and hasAttribute calls
 - Improved filtering to exclude irrelevant images from results
+- Prevented extraction of images from related products, similar items, and recommended products sections
 
 ### Changed
 - Restructured image extraction logic with a multi-tier prioritization approach
 - Enhanced validation of image URLs with pattern matching
 - Implemented more robust filtering for non-product images
+- Added DOM structure analysis to identify and exclude related products containers
 
 ## 1.0.0 - Initial Release
 
