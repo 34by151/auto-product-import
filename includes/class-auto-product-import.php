@@ -78,6 +78,27 @@ class Auto_Product_Import {
     public function register_settings() {
         register_setting('auto_product_import_settings', 'auto_product_import_default_category');
         register_setting('auto_product_import_settings', 'auto_product_import_default_status');
+        register_setting('auto_product_import_settings', 'auto_product_import_max_images', array(
+            'default' => 20,
+            'sanitize_callback' => array($this, 'sanitize_max_images')
+        ));
+    }
+    
+    /**
+     * Sanitize the max images setting.
+     *
+     * @since 1.0.0
+     * @param mixed $value The value to sanitize.
+     * @return int The sanitized value.
+     */
+    public function sanitize_max_images($value) {
+        $value = absint($value);
+        if ($value < 1) {
+            $value = 1;
+        } elseif ($value > 50) {
+            $value = 50;
+        }
+        return $value;
     }
 
     /**
@@ -96,6 +117,7 @@ class Auto_Product_Import {
         // Get settings
         $default_category = get_option('auto_product_import_default_category', '');
         $default_status = get_option('auto_product_import_default_status', 'draft');
+        $max_images = get_option('auto_product_import_max_images', 20);
         
         // Get product categories
         $categories = get_terms(array(
@@ -159,6 +181,12 @@ class Auto_Product_Import {
      * @return array|WP_Error An array of product data or a WP_Error object on failure.
      */
     public function fetch_product_data_from_url($url) {
+        // Enable debug for impactguns.com specifically
+        if (strpos($url, 'impactguns.com') !== false) {
+            add_filter('auto_product_import_debug_mode', '__return_true');
+            error_log('Auto Product Import - Debug mode enabled for Impact Guns URL: ' . $url);
+        }
+        
         // Fetch the URL content
         $response = wp_remote_get($url, array(
             'timeout' => 60, // Increase timeout for larger pages
@@ -230,56 +258,407 @@ class Auto_Product_Import {
             $product_data['description'] = $cleaned_html;
         }
         
-        // Try to get images
-        $image_nodes = $xpath->query('//img[contains(@class, "product") or contains(@id, "product")]/@src');
-        if ($image_nodes && $image_nodes->length > 0) {
-            foreach ($image_nodes as $img) {
-                $image_url = $img->textContent;
-                // Make sure the image URL is absolute
-                if (strpos($image_url, 'http') !== 0) {
-                    $parsed_url = parse_url($url);
-                    $base_url = $parsed_url['scheme'] . '://' . $parsed_url['host'];
-                    if (strpos($image_url, '/') === 0) {
-                        $image_url = $base_url . $image_url;
-                    } else {
-                        $image_url = $base_url . '/' . $image_url;
-                    }
-                }
-                $product_data['images'][] = $image_url;
-            }
-        }
-        
-        // If no specific product images found, look for any large images
-        if (empty($product_data['images'])) {
-            $all_images = $xpath->query('//img/@src');
-            foreach ($all_images as $img) {
-                $image_url = $img->textContent;
-                // Skip small images and icons
-                if (strpos($image_url, 'icon') !== false || strpos($image_url, 'logo') !== false) {
-                    continue;
-                }
-                
-                // Make sure the image URL is absolute
-                if (strpos($image_url, 'http') !== 0) {
-                    $parsed_url = parse_url($url);
-                    $base_url = $parsed_url['scheme'] . '://' . $parsed_url['host'];
-                    if (strpos($image_url, '/') === 0) {
-                        $image_url = $base_url . $image_url;
-                    } else {
-                        $image_url = $base_url . '/' . $image_url;
-                    }
-                }
-                
-                $product_data['images'][] = $image_url;
-                
-                // Limit to 5 images
-                if (count($product_data['images']) >= 5) {
-                    break;
-                }
-            }
-        }
+        // Enhanced image extraction
+        $product_data['images'] = $this->extractProductImages($xpath, $url);
         
         return $product_data;
+    }
+
+    /**
+     * Extract product images from the page.
+     * 
+     * @param DOMXPath $xpath The XPath object
+     * @param string $url The source URL for resolving relative paths
+     * @return array Array of image URLs
+     */
+    private function extractProductImages($xpath, $url) {
+        $images = array();
+        $image_urls_set = array(); // To track unique image URLs
+        $debug_mode = apply_filters('auto_product_import_debug_mode', false);
+        
+        // Blacklist of terms that indicate non-product images
+        $blacklisted_terms = array(
+            'icon', 'logo', 'placeholder', 'pixel', 'spinner', 'loading', 'banner',
+            'button', 'thumbnail-default', 'social', 'facebook', 'twitter', 'instagram',
+            'background', 'pattern', 'avatar', 'profile', 'cart', 'checkout', 'payment',
+            'shipping', 'footer', 'header', 'navigation', 'menu', 'search', 'sprite', 'guarantee',
+            'badge', 'star', 'rating', 'share', 'wishlist', 'compare', 'like', 'heart',
+            'zoom', 'magnify', 'close', 'play', 'video-placeholder'
+        );
+        
+        if ($debug_mode) {
+            error_log('Auto Product Import - Starting image extraction for URL: ' . $url);
+        }
+        
+        // PART 1: First try to get images from product-specific containers (most reliable)
+        // --------------------------------------------------
+        $product_containers = array(
+            // Main product image containers
+            '//div[contains(@class, "product-gallery") or contains(@class, "product-images") or contains(@class, "product-photo") or contains(@id, "product-gallery") or contains(@id, "product-images")]',
+            '//div[contains(@class, "productView-images") or contains(@class, "product-media")]',
+            '//div[@id="product-image" or @id="product-images" or @id="main-product-image"]',
+            '//figure[contains(@class, "product-image") or contains(@class, "product-gallery")]',
+            '//div[contains(@class, "woocommerce-product-gallery") or contains(@id, "woocommerce-product-gallery")]',
+            '//div[contains(@class, "product_images") or contains(@id, "product_images")]'
+        );
+        
+        // Check each container for images
+        foreach ($product_containers as $container_query) {
+            $containers = $xpath->query($container_query);
+            if ($containers && $containers->length > 0) {
+                foreach ($containers as $container) {
+                    // Check for data-zoom attributes first as they usually hold high-res URLs
+                    $data_imgs = $xpath->query('.//img[@data-zoom-image or @data-large-image or @data-full-image or @data-image]', $container);
+                    if ($data_imgs && $data_imgs->length > 0) {
+                        foreach ($data_imgs as $img) {
+                            // Try different data attributes for high-res images
+                            foreach (array('data-zoom-image', 'data-large-image', 'data-full-image', 'data-image') as $attr) {
+                                if ($this->domHasAttribute($img, $attr)) {
+                                    $img_url = $this->domGetAttribute($img, $attr);
+                                    if ($this->isValidProductImage($img_url, $blacklisted_terms)) {
+                                        $absolute_url = $this->makeUrlAbsolute($img_url, $url);
+                                        if (!isset($image_urls_set[$absolute_url])) {
+                                            $image_urls_set[$absolute_url] = true;
+                                            $images[] = $absolute_url;
+                                            if ($debug_mode) {
+                                                error_log('Auto Product Import - Found high-res product image: ' . $absolute_url);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    
+                    // Check for regular large images
+                    $product_imgs = $xpath->query('.//img', $container);
+                    if ($product_imgs && $product_imgs->length > 0) {
+                        foreach ($product_imgs as $img) {
+                            $src = $this->domGetAttribute($img, 'src');
+                            if ($this->isValidProductImage($src, $blacklisted_terms)) {
+                                $absolute_url = $this->makeUrlAbsolute($src, $url);
+                                if (!isset($image_urls_set[$absolute_url])) {
+                                    $image_urls_set[$absolute_url] = true;
+                                    $images[] = $absolute_url;
+                                    if ($debug_mode) {
+                                        error_log('Auto Product Import - Found product image: ' . $absolute_url);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    
+                    // Look for <a> links with href pointing to images
+                    $product_links = $xpath->query('.//a[contains(@class, "product") or @data-image]', $container);
+                    if ($product_links && $product_links->length > 0) {
+                        foreach ($product_links as $link) {
+                            $href = $this->domGetAttribute($link, 'href');
+                            if ($this->isValidProductImage($href, $blacklisted_terms)) {
+                                $absolute_url = $this->makeUrlAbsolute($href, $url);
+                                if (!isset($image_urls_set[$absolute_url])) {
+                                    $image_urls_set[$absolute_url] = true;
+                                    $images[] = $absolute_url;
+                                    if ($debug_mode) {
+                                        error_log('Auto Product Import - Found product image link: ' . $absolute_url);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        // PART 2: BigCommerce specific extraction for sites like impactguns.com
+        // --------------------------------------------------
+        if (strpos($url, 'impactguns.com') !== false || strpos($url, 'bigcommerce.com') !== false) {
+            $this->extractBigCommerceImages($xpath, $url, $images, $image_urls_set, $debug_mode);
+        }
+        
+        // PART 3: Look for thumbnails that might be in their own container
+        // --------------------------------------------------
+        if (count($images) < 10) { // Only try this if we don't have many images yet
+            $thumbnail_containers = array(
+                '//ul[contains(@class, "thumbnails") or contains(@class, "product-thumbnails")]',
+                '//ol[contains(@class, "thumbnails") or contains(@class, "product-thumbnails")]',
+                '//div[contains(@class, "thumbnails") or contains(@class, "thumbnail-container") or contains(@id, "thumbnails")]',
+                '//div[contains(@class, "productView-thumbnails")]'
+            );
+            
+            foreach ($thumbnail_containers as $container_query) {
+                $containers = $xpath->query($container_query);
+                if ($containers && $containers->length > 0) {
+                    foreach ($containers as $container) {
+                        $thumbnail_links = $xpath->query('.//a', $container);
+                        if ($thumbnail_links && $thumbnail_links->length > 0) {
+                            foreach ($thumbnail_links as $link) {
+                                // Check for href attribute
+                                $href = $this->domGetAttribute($link, 'href');
+                                if ($this->isValidProductImage($href, $blacklisted_terms)) {
+                                    $absolute_url = $this->makeUrlAbsolute($href, $url);
+                                    if (!isset($image_urls_set[$absolute_url])) {
+                                        $image_urls_set[$absolute_url] = true;
+                                        $images[] = $absolute_url;
+                                        if ($debug_mode) {
+                                            error_log('Auto Product Import - Found product thumbnail link: ' . $absolute_url);
+                                        }
+                                    }
+                                }
+                                
+                                // Also check for data attributes
+                                foreach (array('data-image', 'data-large-image', 'data-zoom-image', 'data-original') as $attr) {
+                                    if ($this->domHasAttribute($link, $attr)) {
+                                        $img_url = $this->domGetAttribute($link, $attr);
+                                        if ($this->isValidProductImage($img_url, $blacklisted_terms)) {
+                                            $absolute_url = $this->makeUrlAbsolute($img_url, $url);
+                                            if (!isset($image_urls_set[$absolute_url])) {
+                                                $image_urls_set[$absolute_url] = true;
+                                                $images[] = $absolute_url;
+                                                if ($debug_mode) {
+                                                    error_log('Auto Product Import - Found product thumbnail image: ' . $absolute_url);
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                
+                                // Also check for img tags inside the link
+                                $thumbnail_imgs = $xpath->query('.//img', $link);
+                                if ($thumbnail_imgs && $thumbnail_imgs->length > 0) {
+                                    foreach ($thumbnail_imgs as $img) {
+                                        $src = $this->domGetAttribute($img, 'src');
+                                        if ($this->isValidProductImage($src, $blacklisted_terms)) {
+                                            $absolute_url = $this->makeUrlAbsolute($src, $url);
+                                            if (!isset($image_urls_set[$absolute_url])) {
+                                                $image_urls_set[$absolute_url] = true;
+                                                $images[] = $absolute_url;
+                                                if ($debug_mode) {
+                                                    error_log('Auto Product Import - Found product thumbnail: ' . $absolute_url);
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        // PART 4: Allow developers to add or modify images
+        // --------------------------------------------------
+        $images = apply_filters('auto_product_import_found_images', $images, $xpath, $url);
+        
+        // PART 5: Fallback approaches if we still don't have enough images
+        // --------------------------------------------------
+        if (count($images) < 3) {
+            $this->extractFallbackImages($xpath, $url, $images, $image_urls_set, $blacklisted_terms, $debug_mode);
+        }
+        
+        // Post-processing: Prioritize images by likely quality and relevance
+        $processed_images = $this->prioritizeProductImages($images, $url);
+        
+        // Apply max image count limit
+        $max_images = apply_filters('auto_product_import_max_images', 20);
+        if (count($processed_images) > $max_images) {
+            $processed_images = array_slice($processed_images, 0, $max_images);
+        }
+        
+        if ($debug_mode) {
+            error_log('Auto Product Import - Extracted ' . count($processed_images) . ' product images');
+        }
+        
+        return $processed_images;
+    }
+    
+    /**
+     * Extract fallback images when primary methods don't find enough
+     *
+     * @param DOMXPath $xpath The XPath object
+     * @param string $url The source URL
+     * @param array &$images The images array to add to
+     * @param array &$image_urls_set The set of already found image URLs
+     * @param array $blacklisted_terms Terms that indicate non-product images
+     * @param bool $debug_mode Whether debug mode is enabled
+     */
+    private function extractFallbackImages($xpath, $url, &$images, &$image_urls_set, $blacklisted_terms, $debug_mode) {
+        // Fallback 1: Look for large images by size
+        $large_imgs = $xpath->query('//img[@width > 300 or @height > 300]');
+        if ($large_imgs && $large_imgs->length > 0) {
+            foreach ($large_imgs as $img) {
+                $src = $this->domGetAttribute($img, 'src');
+                if ($this->isValidProductImage($src, $blacklisted_terms)) {
+                    $absolute_url = $this->makeUrlAbsolute($src, $url);
+                    if (!isset($image_urls_set[$absolute_url])) {
+                        $image_urls_set[$absolute_url] = true;
+                        $images[] = $absolute_url;
+                        if ($debug_mode) {
+                            error_log('Auto Product Import - Found large image: ' . $absolute_url);
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Fallback 2: Look for images with product-related classes
+        $product_class_imgs = $xpath->query('//img[contains(@class, "product") or contains(@id, "product")]');
+        if ($product_class_imgs && $product_class_imgs->length > 0) {
+            foreach ($product_class_imgs as $img) {
+                $src = $this->domGetAttribute($img, 'src');
+                if ($this->isValidProductImage($src, $blacklisted_terms)) {
+                    $absolute_url = $this->makeUrlAbsolute($src, $url);
+                    if (!isset($image_urls_set[$absolute_url])) {
+                        $image_urls_set[$absolute_url] = true;
+                        $images[] = $absolute_url;
+                        if ($debug_mode) {
+                            error_log('Auto Product Import - Found product class image: ' . $absolute_url);
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Fallback 3: Look for images within main content area
+        $content_containers = $xpath->query('//div[contains(@class, "content") or contains(@class, "main") or contains(@id, "content") or contains(@id, "main")]');
+        if ($content_containers && $content_containers->length > 0) {
+            foreach ($content_containers as $container) {
+                $content_imgs = $xpath->query('.//img', $container);
+                if ($content_imgs && $content_imgs->length > 0) {
+                    foreach ($content_imgs as $img) {
+                        $src = $this->domGetAttribute($img, 'src');
+                        if ($this->isValidProductImage($src, $blacklisted_terms)) {
+                            $absolute_url = $this->makeUrlAbsolute($src, $url);
+                            if (!isset($image_urls_set[$absolute_url])) {
+                                $image_urls_set[$absolute_url] = true;
+                                $images[] = $absolute_url;
+                                if ($debug_mode) {
+                                    error_log('Auto Product Import - Found content area image: ' . $absolute_url);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    /**
+     * Check if an image URL appears to be a valid product image
+     * 
+     * @param string $url The image URL to check
+     * @param array $blacklisted_terms Array of terms that indicate non-product images
+     * @return bool Whether the image appears to be a valid product image
+     */
+    private function isValidProductImage($url, $blacklisted_terms) {
+        if (empty($url)) {
+            return false;
+        }
+        
+        // Skip data URIs
+        if (strpos($url, 'data:image') === 0) {
+            return false;
+        }
+        
+        // Skip blacklisted terms
+        foreach ($blacklisted_terms as $term) {
+            if (stripos($url, $term) !== false) {
+                return false;
+            }
+        }
+        
+        // Check for common image extensions
+        $has_image_extension = preg_match('/\.(jpg|jpeg|png|gif|webp)(\?.*)?$/i', $url);
+        
+        // Check for image-like paths
+        $has_image_path = strpos($url, '/images/') !== false || 
+                          strpos($url, '/img/') !== false || 
+                          strpos($url, '/photos/') !== false || 
+                          strpos($url, '/product/') !== false ||
+                          strpos($url, '/products/') !== false;
+        
+        // Check for image dimensions in URL (common for product images)
+        $has_dimensions = preg_match('/\/\d+x\d+\//', $url) || 
+                          preg_match('/[_-]\d+x\d+/', $url) ||
+                          preg_match('/size=\d+x\d+/', $url) ||
+                          preg_match('/width=\d+/', $url);
+        
+        // If image has a valid extension or appears to be an image path, consider it valid
+        return $has_image_extension || $has_image_path || $has_dimensions;
+    }
+    
+    /**
+     * Prioritize and filter product images based on likely relevance and quality
+     * 
+     * @param array $images Array of image URLs
+     * @param string $url The source URL
+     * @return array Prioritized array of image URLs
+     */
+    private function prioritizeProductImages($images, $url) {
+        if (empty($images) || count($images) <= 1) {
+            return $images;
+        }
+        
+        $prioritized = array();
+        $regular = array();
+        $lower_priority = array();
+        
+        // Get the domain from the URL to identify images from the same site
+        $parsed_url = parse_url($url);
+        $domain = isset($parsed_url['host']) ? $parsed_url['host'] : '';
+        
+        foreach ($images as $image_url) {
+            // Skip empty URLs
+            if (empty($image_url)) {
+                continue;
+            }
+            
+            $parsed_image = parse_url($image_url);
+            $image_domain = isset($parsed_image['host']) ? $parsed_image['host'] : '';
+            
+            // 1. Prioritize known high-res indicators
+            if (strpos($image_url, 'large') !== false || 
+                strpos($image_url, 'zoom') !== false ||
+                strpos($image_url, 'full') !== false ||
+                preg_match('/\/1280x1280\//', $image_url) ||
+                preg_match('/\/1000x1000\//', $image_url) ||
+                preg_match('/\/800x800\//', $image_url)) {
+                $prioritized[] = $image_url;
+            }
+            // 2. For BigCommerce sites, prioritize enhanced URLs
+            else if (strpos($url, 'bigcommerce.com') !== false || strpos($url, 'impactguns.com') !== false) {
+                // Enhance to high resolution
+                $high_res_url = preg_replace('/\/\d+x\d+\//', '/1280x1280/', $image_url);
+                if ($high_res_url !== $image_url) {
+                    $prioritized[] = $high_res_url;
+                } else {
+                    $high_res_url = preg_replace('/\/\d+w\//', '/1280w/', $image_url);
+                    if ($high_res_url !== $image_url) {
+                        $prioritized[] = $high_res_url;
+                    } else {
+                        $regular[] = $image_url;
+                    }
+                }
+            }
+            // 3. Images from same domain get regular priority
+            else if ($image_domain === $domain) {
+                $regular[] = $image_url;
+            }
+            // 4. CDN domains usually have good images too
+            else if (strpos($image_domain, 'cdn') !== false) {
+                $regular[] = $image_url;
+            }
+            // 5. Other images get lower priority
+            else {
+                $lower_priority[] = $image_url;
+            }
+        }
+        
+        // Combine the arrays in priority order
+        $result = array_merge($prioritized, $regular, $lower_priority);
+        
+        // Remove duplicates (in case the same URL got into different priority levels)
+        return array_values(array_unique($result));
     }
 
     /**
@@ -803,14 +1182,54 @@ class Auto_Product_Import {
         
         // Upload and attach images
         if (!empty($product_data['images'])) {
-            $product_images = array();
+            // Add the total count of found images as meta data
+            $total_images_found = count($product_data['images']);
+            update_post_meta($product_id, '_total_images_found', $total_images_found);
             
-            foreach ($product_data['images'] as $image_url) {
+            $product_images = array();
+            $processed_count = 0;
+            
+            // Get the maximum number of images to process from settings
+            $max_images_to_process = get_option('auto_product_import_max_images', 20);
+            $max_images_to_process = apply_filters('auto_product_import_max_images', $max_images_to_process);
+            $images_to_process = array_slice($product_data['images'], 0, $max_images_to_process);
+            
+            // Track progress for larger image sets
+            $total_images = count($images_to_process);
+            if ($total_images > 5) {
+                // Optional: add a progress note as post meta
+                update_post_meta($product_id, '_auto_import_processing_images', $total_images);
+            }
+            
+            foreach ($images_to_process as $image_url) {
+                // Skip URLs that don't look like images
+                $file_extension = strtolower(pathinfo($image_url, PATHINFO_EXTENSION));
+                $valid_extensions = array('jpg', 'jpeg', 'png', 'gif', 'webp');
+                
+                // If no extension or not a valid image extension, try to infer from URL
+                if (empty($file_extension) || !in_array($file_extension, $valid_extensions)) {
+                    // Check if URL has image-like patterns
+                    if (strpos($image_url, '/images/') === false && 
+                        strpos($image_url, '/img/') === false && 
+                        strpos($image_url, 'image') === false) {
+                        continue; // Skip URLs that don't seem to be images
+                    }
+                }
+                
                 $attachment_id = $this->upload_remote_image($image_url, $product_id);
                 if ($attachment_id) {
                     $product_images[] = $attachment_id;
+                    $processed_count++;
+                }
+                
+                // Add a small delay between image uploads to prevent overwhelming the server
+                if ($processed_count > 5) {
+                    usleep(100000); // 100ms pause
                 }
             }
+            
+            // Remove the processing flag
+            delete_post_meta($product_id, '_auto_import_processing_images');
             
             // Set product images
             if (!empty($product_images)) {
@@ -825,6 +1244,9 @@ class Auto_Product_Import {
                 
                 // Save the product again with images
                 $product->save();
+                
+                // Store the count of imported images
+                update_post_meta($product_id, '_imported_image_count', count($product_images));
             }
         }
         
@@ -845,10 +1267,15 @@ class Auto_Product_Import {
         require_once(ABSPATH . 'wp-admin/includes/file.php');
         require_once(ABSPATH . 'wp-admin/includes/image.php');
         
-        // Download the image
-        $tmp = download_url($image_url);
+        // Allow longer timeouts for downloading images
+        $timeout = apply_filters('auto_product_import_image_timeout', 60);
+        
+        // Download the image with increased timeout
+        $tmp = download_url($image_url, $timeout);
         
         if (is_wp_error($tmp)) {
+            // Log the error but continue with other images
+            error_log('Auto Product Import - Failed to download image: ' . $image_url . ' - Error: ' . $tmp->get_error_message());
             return false;
         }
         
@@ -859,15 +1286,62 @@ class Auto_Product_Import {
         // Check file type
         $filetype = wp_check_filetype($file_array['name'], null);
         if (empty($filetype['ext']) || empty($filetype['type'])) {
-            // If no extension, try to determine from the URL
+            // If no extension, try to determine from the URL or file contents
             $url_parts = parse_url($image_url);
             $url_path = pathinfo($url_parts['path']);
+            
+            // Try to get extension from URL
             if (!empty($url_path['extension'])) {
-                $file_array['name'] = 'product-image-' . time() . '.' . $url_path['extension'];
+                $ext = strtolower($url_path['extension']);
+                // Verify it's a valid image extension
+                if (in_array($ext, array('jpg', 'jpeg', 'png', 'gif', 'webp'))) {
+                    $file_array['name'] = 'product-image-' . time() . '.' . $ext;
             } else {
-                // Default to jpg
+                    $file_array['name'] = 'product-image-' . time() . '.jpg'; // Default
+                }
+            } else {
+                // Try to determine file type from content
+                $file_info = getimagesize($tmp);
+                if ($file_info && isset($file_info['mime'])) {
+                    $mime = $file_info['mime'];
+                    switch ($mime) {
+                        case 'image/jpeg':
+                            $ext = 'jpg';
+                            break;
+                        case 'image/png':
+                            $ext = 'png';
+                            break;
+                        case 'image/gif':
+                            $ext = 'gif';
+                            break;
+                        case 'image/webp':
+                            $ext = 'webp';
+                            break;
+                        default:
+                            $ext = 'jpg'; // Default
+                    }
+                    $file_array['name'] = 'product-image-' . time() . '.' . $ext;
+                } else {
+                    // Default to jpg if can't determine
                 $file_array['name'] = 'product-image-' . time() . '.jpg';
+                }
             }
+        }
+        
+        // Verify this is an image file before attempting to process
+        $image_info = @getimagesize($tmp);
+        if (!$image_info) {
+            // Not a valid image
+            @unlink($tmp);
+            return false;
+        }
+        
+        // Check image dimensions to filter out tiny images
+        list($width, $height) = $image_info;
+        if ($width < 200 || $height < 200) {
+            // Image too small to be useful
+            @unlink($tmp);
+            return false;
         }
         
         // Upload the image
@@ -879,6 +1353,7 @@ class Auto_Product_Import {
         }
         
         if (is_wp_error($attachment_id)) {
+            error_log('Auto Product Import - Failed to process image: ' . $image_url . ' - Error: ' . $attachment_id->get_error_message());
             return false;
         }
         
@@ -925,5 +1400,198 @@ class Auto_Product_Import {
      */
     public function get_additional_product_info($description_html, $debug = false) {
         return $this->extract_additional_product_info($description_html, $debug);
+    }
+
+    /**
+     * Convert a relative URL to an absolute URL
+     * 
+     * @param string $relative_url The potentially relative URL
+     * @param string $base_url The base URL to resolve against
+     * @return string The absolute URL
+     */
+    private function makeUrlAbsolute($relative_url, $base_url) {
+        // Already absolute
+        if (strpos($relative_url, 'http') === 0) {
+            return $relative_url;
+        }
+        
+        $parsed_url = parse_url($base_url);
+        $base = $parsed_url['scheme'] . '://' . $parsed_url['host'];
+        
+        // URL starts with '//'
+        if (strpos($relative_url, '//') === 0) {
+            return $parsed_url['scheme'] . ':' . $relative_url;
+        }
+        
+        // URL starts with '/'
+        if (strpos($relative_url, '/') === 0) {
+            return $base . $relative_url;
+        }
+        
+        // Relative URL
+        if (isset($parsed_url['path'])) {
+            $path = dirname($parsed_url['path']);
+            return $base . $path . '/' . $relative_url;
+        }
+        
+        return $base . '/' . $relative_url;
+    }
+    
+    /**
+     * Safely check if a DOM element has an attribute
+     * 
+     * @param DOMElement|DOMNode $element The DOM element to check
+     * @param string $attribute The attribute to check for
+     * @return bool Whether the element has the attribute
+     */
+    private function domHasAttribute($element, $attribute) {
+        return method_exists($element, 'hasAttribute') && $element->hasAttribute($attribute);
+    }
+    
+    /**
+     * Safely get an attribute value from a DOM element
+     * 
+     * @param DOMElement|DOMNode $element The DOM element
+     * @param string $attribute The attribute to get
+     * @return string The attribute value or empty string if not found
+     */
+    private function domGetAttribute($element, $attribute) {
+        if (method_exists($element, 'getAttribute')) {
+            return $element->getAttribute($attribute);
+        }
+        return '';
+    }
+
+    /**
+     * Extract images from BigCommerce sites like impactguns.com
+     * 
+     * @param DOMXPath $xpath The XPath object
+     * @param string $url The source URL
+     * @param array &$images The images array to add to
+     * @param array &$image_urls_set The set of already found image URLs
+     * @param bool $debug_mode Whether to enable debug mode
+     */
+    private function extractBigCommerceImages($xpath, $url, &$images, &$image_urls_set, $debug_mode) {
+        if ($debug_mode) {
+            error_log('Auto Product Import - Starting BigCommerce image extraction');
+        }
+        
+        // 1. Try to get productView-thumbnails links
+        $thumbnail_links = $xpath->query('//ul[contains(@class, "productView-thumbnails")]//a[@data-image-gallery-item]');
+        if ($thumbnail_links && $thumbnail_links->length > 0) {
+            if ($debug_mode) {
+                error_log('Auto Product Import - Found ' . $thumbnail_links->length . ' productView thumbnail links');
+            }
+            
+            foreach ($thumbnail_links as $link) {
+                $this->extractBigCommerceImageFromLink($link, $url, $images, $image_urls_set, $debug_mode);
+            }
+        }
+        
+        // 2. Try data-image-gallery-new-image-url attributes
+        $gallery_url_attrs = $xpath->query('//*[@data-image-gallery-new-image-url]');
+        if ($gallery_url_attrs && $gallery_url_attrs->length > 0) {
+            if ($debug_mode) {
+                error_log('Auto Product Import - Found ' . $gallery_url_attrs->length . ' data-image-gallery-new-image-url attributes');
+            }
+            
+            foreach ($gallery_url_attrs as $elem) {
+                $image_url = $this->domGetAttribute($elem, 'data-image-gallery-new-image-url');
+                if (!empty($image_url)) {
+                    // Get highest quality version by replacing resolution in URL
+                    $high_res_url = preg_replace('/\/\d+x\d+\//', '/1280x1280/', $image_url);
+                    $absolute_url = $this->makeUrlAbsolute($high_res_url ? $high_res_url : $image_url, $url);
+                    
+                    if (!isset($image_urls_set[$absolute_url])) {
+                        $image_urls_set[$absolute_url] = true;
+                        $images[] = $absolute_url;
+                        
+                        if ($debug_mode) {
+                            error_log('Auto Product Import - Added BigCommerce gallery image: ' . $absolute_url);
+                        }
+                    }
+                }
+            }
+        }
+        
+        // 3. Try direct image tags with high-res pattern
+        $product_images = $xpath->query('//img[contains(@src, "cdn") and contains(@src, "bigcommerce")]');
+        if ($product_images && $product_images->length > 0) {
+            foreach ($product_images as $img) {
+                $src = $this->domGetAttribute($img, 'src');
+                if (!empty($src) && 
+                    strpos($src, 'icon') === false && 
+                    strpos($src, 'logo') === false &&
+                    strpos($src, 'placeholder') === false &&
+                    strpos($src, 'pixel') === false) {
+                    
+                    // Get highest quality version 
+                    $high_res_url = preg_replace('/\/\d+x\d+\//', '/1280x1280/', $src);
+                    // Also try to get highest quality version from product path
+                    $high_res_url = preg_replace('/\/\d+w\//', '/1280w/', $high_res_url);
+                    
+                    $absolute_url = $this->makeUrlAbsolute($high_res_url ? $high_res_url : $src, $url);
+                    
+                    if (!isset($image_urls_set[$absolute_url])) {
+                        $image_urls_set[$absolute_url] = true;
+                        $images[] = $absolute_url;
+                        
+                        if ($debug_mode) {
+                            error_log('Auto Product Import - Added BigCommerce product image: ' . $absolute_url);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    /**
+     * Extract a BigCommerce image from a thumbnail link
+     *
+     * @param DOMElement $link The link element
+     * @param string $url The source URL
+     * @param array &$images The images array to add to
+     * @param array &$image_urls_set The set of already found image URLs
+     * @param bool $debug_mode Whether to enable debug mode
+     */
+    private function extractBigCommerceImageFromLink($link, $url, &$images, &$image_urls_set, $debug_mode) {
+        // First try data attribute
+        if ($this->domHasAttribute($link, 'data-image-gallery-new-image-url')) {
+            $image_url = $this->domGetAttribute($link, 'data-image-gallery-new-image-url');
+            if (!empty($image_url)) {
+                // Convert to highest resolution by replacing size in URL
+                $high_res_url = preg_replace('/\/\d+x\d+\//', '/1280x1280/', $image_url);
+                $absolute_url = $this->makeUrlAbsolute($high_res_url ? $high_res_url : $image_url, $url);
+                
+                if (!isset($image_urls_set[$absolute_url])) {
+                    $image_urls_set[$absolute_url] = true;
+                    $images[] = $absolute_url;
+                    
+                    if ($debug_mode) {
+                        error_log('Auto Product Import - Added BigCommerce thumbnail image from data attribute: ' . $absolute_url);
+                    }
+                    return; // Done with this link
+                }
+            }
+        }
+        
+        // Then try href
+        if ($this->domHasAttribute($link, 'href')) {
+            $image_url = $this->domGetAttribute($link, 'href');
+            if (!empty($image_url)) {
+                // Convert to highest resolution
+                $high_res_url = preg_replace('/\/\d+x\d+\//', '/1280x1280/', $image_url);
+                $absolute_url = $this->makeUrlAbsolute($high_res_url ? $high_res_url : $image_url, $url);
+                
+                if (!isset($image_urls_set[$absolute_url])) {
+                    $image_urls_set[$absolute_url] = true;
+                    $images[] = $absolute_url;
+                    
+                    if ($debug_mode) {
+                        error_log('Auto Product Import - Added BigCommerce thumbnail image from href: ' . $absolute_url);
+                    }
+                }
+            }
+        }
     }
 } 
