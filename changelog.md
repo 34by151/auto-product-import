@@ -2,7 +2,21 @@
 
 All notable changes to the Auto Product Import plugin will be documented in this file.
 
-## 1.1.0 - 2025-03-24
+## 1.1.1 - 2023-04-01
+
+### Fixed
+- Resolved issue with no images being extracted from product pages
+- Fixed undefined property and method errors in image extraction code
+- Corrected parameter handling in image extraction functions
+- Added proper URL resolving for relative image paths
+- Enhanced BigCommerce-specific selectors for thumbnail images
+- Implemented safer DOM attribute checks with domHasAttribute and domGetAttribute
+
+### Added
+- Improved test script for verifying image extraction functionality
+- More robust error handling and debugging for image extraction
+
+## 1.1.0 - 2023-03-24
 
 ### Added
 - BigCommerce-specific selectors for product images extraction

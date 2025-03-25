@@ -259,7 +259,16 @@ class Auto_Product_Import {
         }
         
         // Enhanced image extraction
+        $debug_mode = apply_filters('auto_product_import_debug_mode', false);
+        if ($debug_mode) {
+            error_log("Starting enhanced image extraction for URL: " . $url);
+        }
+        
         $product_data['images'] = $this->extractProductImages($xpath, $url);
+        
+        if ($debug_mode) {
+            error_log("Completed image extraction. Found " . count($product_data['images']) . " images");
+        }
         
         return $product_data;
     }
@@ -267,9 +276,11 @@ class Auto_Product_Import {
     /**
      * Extract product images from the HTML
      * 
+     * @param DOMXPath $xpath The XPath object
+     * @param string $url The URL of the product page
      * @return array Array of product images
      */
-    private function extractProductImages() {
+    private function extractProductImages($xpath, $url) {
         $images = [];
         $image_urls_set = []; // Use as a set to track unique URLs
         $debug_mode = apply_filters('auto_product_import_debug_mode', false);
@@ -277,28 +288,6 @@ class Auto_Product_Import {
         if ($debug_mode) {
             error_log("Starting product image extraction");
         }
-        
-        if (empty($this->html)) {
-            if ($debug_mode) {
-                error_log("HTML is empty, cannot extract images");
-            }
-            return $images;
-        }
-        
-        // Create DOMDocument
-        $dom = new DOMDocument();
-        
-        // Suppress warnings from malformed HTML
-        $old_setting = libxml_use_internal_errors(true);
-        
-        // Load the HTML
-        @$dom->loadHTML($this->html);
-        
-        // Restore error handling
-        libxml_use_internal_errors($old_setting);
-        
-        // Create XPath object
-        $xpath = new DOMXPath($dom);
         
         // Define blacklisted terms
         $blacklisted_terms = [
@@ -315,7 +304,7 @@ class Auto_Product_Import {
             error_log("Trying BigCommerce specific extraction");
         }
         
-        $this->extractBigCommerceImages($xpath, $this->url, $images, $image_urls_set, $debug_mode);
+        $this->extractBigCommerceImages($xpath, $url, $images, $image_urls_set, $debug_mode);
         
         // If we still don't have enough images, try other approaches
         if (count($images) < 3) {
@@ -323,11 +312,12 @@ class Auto_Product_Import {
                 error_log("Not enough images from BigCommerce extraction, trying fallback methods");
             }
             
-            $this->extractFallbackImages($xpath, $this->url, $images, $image_urls_set, $blacklisted_terms, $debug_mode);
+            $this->extractFallbackImages($xpath, $url, $images, $image_urls_set, $blacklisted_terms, $debug_mode);
         }
         
-        // Prioritize and filter images
-        $images = $this->prioritizeProductImages($images, $this->url);
+        // Filter and deduplicate images
+        $images = array_unique($images);
+        $images = array_values($images); // Reset array keys
         
         if ($debug_mode) {
             error_log("Total images extracted: " . count($images));
@@ -375,11 +365,11 @@ class Auto_Product_Import {
                         }
                         continue;
                     }
-                    
+                
                     if ($selector === '//a[contains(@class, "cloud-zoom-gallery")]') {
                         $this->extractBigCommerceImageFromLink($node, $url, $images, $image_urls_set, $debug_mode);
                     } else {
-                        $this->extractAndFilterImageFromNode($node, $images, $image_urls_set, $blacklisted_terms, $debug_mode);
+                        $this->extractAndFilterImageFromNode($node, $images, $image_urls_set, $blacklisted_terms, $debug_mode, $url);
                     }
                 }
             }
@@ -417,7 +407,12 @@ class Auto_Product_Import {
                 }
                 
                 foreach ($nodes as $node) {
-                    $this->extractAndFilterImageFromNode($node, $images, $image_urls_set, $blacklisted_terms, $debug_mode);
+                    // Skip if in related products section
+                    if ($this->isInRelatedProductsSection($node)) {
+                        continue;
+                    }
+                    
+                    $this->extractAndFilterImageFromNode($node, $images, $image_urls_set, $blacklisted_terms, $debug_mode, $url);
                 }
             }
         }
@@ -440,7 +435,12 @@ class Auto_Product_Import {
                     }
                     
                     foreach ($nodes as $node) {
-                        $this->extractAndFilterImageFromNode($node, $images, $image_urls_set, $blacklisted_terms, $debug_mode);
+                        // Skip if in related products section
+                        if ($this->isInRelatedProductsSection($node)) {
+                            continue;
+                        }
+                        
+                        $this->extractAndFilterImageFromNode($node, $images, $image_urls_set, $blacklisted_terms, $debug_mode, $url);
                     }
                 }
             }
@@ -456,7 +456,12 @@ class Auto_Product_Import {
                 }
                 
                 foreach ($allImages as $node) {
-                    $this->extractAndFilterImageFromNode($node, $images, $image_urls_set, $blacklisted_terms, $debug_mode);
+                    // Skip if in related products section
+                    if ($this->isInRelatedProductsSection($node)) {
+                        continue;
+                    }
+                    
+                    $this->extractAndFilterImageFromNode($node, $images, $image_urls_set, $blacklisted_terms, $debug_mode, $url);
                     
                     // Stop if we have enough images
                     if (count($images) >= 5) {
@@ -1276,8 +1281,9 @@ class Auto_Product_Import {
      * @param array $image_urls_set A set of already found image URLs to avoid duplicates
      * @param array $blacklisted_terms Terms to blacklist from URLs
      * @param bool $debug_mode Whether to output debug information
+     * @param string $base_url The base URL for resolving relative URLs
      */
-    private function extractAndFilterImageFromNode($node, &$images, &$image_urls_set, $blacklisted_terms, $debug_mode) {
+    private function extractAndFilterImageFromNode($node, &$images, &$image_urls_set, $blacklisted_terms, $debug_mode, $base_url = '') {
         // Skip nodes in related products sections
         if ($this->isInRelatedProductsSection($node)) {
             if ($debug_mode) {
@@ -1297,11 +1303,21 @@ class Auto_Product_Import {
             }
         }
         
+        // Skip empty URLs
+        if (empty($img_url)) {
+            return;
+        }
+        
         // Convert to high-res if possible
         $img_url = $this->convertToHighRes($img_url);
         
+        // Make URL absolute if it's relative
+        if (!empty($base_url) && strpos($img_url, 'http') !== 0) {
+            $img_url = $this->makeUrlAbsolute($img_url, $base_url);
+        }
+        
         // Add to images array if valid and not already present
-        if (!empty($img_url) && $this->isValidProductImage($img_url, $blacklisted_terms) && !isset($image_urls_set[$img_url])) {
+        if ($this->isValidProductImage($img_url, $blacklisted_terms) && !isset($image_urls_set[$img_url])) {
             $images[] = $img_url;
             $image_urls_set[$img_url] = true;
             
@@ -1383,5 +1399,108 @@ class Auto_Product_Import {
         }
         
         return false;
+    }
+
+    /**
+     * Check if an image URL is a valid product image
+     * 
+     * @param string $url Image URL to check
+     * @param array $blacklisted_terms Terms that indicate non-product images
+     * @return bool Whether the URL appears to be a valid product image
+     */
+    private function isValidProductImage($url, $blacklisted_terms) {
+        // Skip empty URLs
+        if (empty($url)) {
+            return false;
+        }
+        
+        // Skip URLs with blacklisted terms
+        foreach ($blacklisted_terms as $term) {
+            if (stripos($url, $term) !== false) {
+                return false;
+            }
+        }
+        
+        // Skip related product image patterns
+        $related_patterns = ['/related/', '/similar/', '/recommended/'];
+        foreach ($related_patterns as $pattern) {
+            if (preg_match($pattern, $url)) {
+                return false;
+            }
+        }
+        
+        // Check for common image extensions
+        $ext = strtolower(pathinfo($url, PATHINFO_EXTENSION));
+        $valid_extensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+        
+        // If it has a valid extension, it's likely an image
+        if (in_array($ext, $valid_extensions)) {
+            return true;
+        }
+        
+        // If no extension, check for common patterns that indicate an image
+        if (strpos($url, '/images/') !== false || 
+            strpos($url, '/img/') !== false || 
+            strpos($url, 'image') !== false ||
+            strpos($url, 'product') !== false) {
+            return true;
+        }
+        
+        // Default to false for URLs that don't match any criteria
+        return false;
+    }
+    
+    /**
+     * Extract image URL from a BigCommerce cloud-zoom-gallery link
+     * 
+     * @param DOMNode $node The link node
+     * @param string $base_url The base URL for resolving relative URLs
+     * @param array $images The array to add images to
+     * @param array $image_urls_set Set of already processed URLs
+     * @param bool $debug_mode Whether to output debug info
+     */
+    private function extractBigCommerceImageFromLink($node, $base_url, &$images, &$image_urls_set, $debug_mode) {
+        // Look for the href attribute first
+        if ($this->domHasAttribute($node, 'href')) {
+            $img_url = $this->domGetAttribute($node, 'href');
+            
+            // Convert to absolute URL if needed
+            if (!empty($img_url) && strpos($img_url, 'http') !== 0) {
+                $img_url = $this->makeUrlAbsolute($img_url, $base_url);
+            }
+            
+            // Convert to high-res if possible
+            $img_url = $this->convertToHighRes($img_url);
+            
+            // Add to images if not already added
+            if (!empty($img_url) && !isset($image_urls_set[$img_url])) {
+                $images[] = $img_url;
+                $image_urls_set[$img_url] = true;
+                
+                if ($debug_mode) {
+                    error_log("Added image from link href: $img_url");
+                }
+            }
+        }
+        
+        // Check for data-zoom-image attribute
+        if ($this->domHasAttribute($node, 'data-zoom-image')) {
+            $img_url = $this->domGetAttribute($node, 'data-zoom-image');
+            
+            // Convert to absolute URL if needed
+            if (!empty($img_url) && strpos($img_url, 'http') !== 0) {
+                $img_url = $this->makeUrlAbsolute($img_url, $base_url);
+            }
+            
+            // Add to images if not already added
+            if (!empty($img_url) && !isset($image_urls_set[$img_url])) {
+                $images[] = $img_url;
+                $image_urls_set[$img_url] = true;
+                
+                if ($debug_mode) {
+                    error_log("Added image from link data-zoom-image: $img_url");
+                }
+            }
+        }
     }
 } 
