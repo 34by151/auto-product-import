@@ -2,6 +2,16 @@
 
 All notable changes to the Auto Product Import plugin will be documented in this file.
 
+## 1.2.0 - 2023-04-15
+
+### Added
+- Automatic conversion of all imported images to PNG format
+- Background removal from product images for a clean, professional appearance
+- Image processing using PHP Imagick extension for high-quality results
+- Fallback to original image format if Imagick is not available
+- Improved image handling with better error reporting
+- Support for transparent backgrounds in product images
+
 ## 1.1.1 - 2023-04-01
 
 ### Fixed

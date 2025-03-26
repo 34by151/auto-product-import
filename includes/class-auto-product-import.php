@@ -1155,12 +1155,33 @@ class Auto_Product_Import {
             return false;
         }
         
-        // Upload the image
-        $attachment_id = media_handle_sideload($file_array, $product_id);
+        // Process the image to PNG with transparent background
+        $processed_file = $this->process_image_png_transparent($tmp);
         
-        // Clean up the temporary file
-        if (file_exists($tmp)) {
-            @unlink($tmp);
+        // If processing succeeded, use the processed file
+        if ($processed_file) {
+            // Update file array to use the processed PNG file
+            $file_array['tmp_name'] = $processed_file;
+            $file_array['name'] = pathinfo($file_array['name'], PATHINFO_FILENAME) . '.png';
+            
+            // Upload the processed image
+            $attachment_id = media_handle_sideload($file_array, $product_id);
+            
+            // Clean up the temporary files
+            if (file_exists($tmp)) {
+                @unlink($tmp);
+            }
+            if (file_exists($processed_file) && $processed_file !== $tmp) {
+                @unlink($processed_file);
+            }
+        } else {
+            // If processing failed, upload the original image
+            $attachment_id = media_handle_sideload($file_array, $product_id);
+            
+            // Clean up the temporary file
+            if (file_exists($tmp)) {
+                @unlink($tmp);
+            }
         }
         
         if (is_wp_error($attachment_id)) {
@@ -1169,6 +1190,94 @@ class Auto_Product_Import {
         }
         
         return $attachment_id;
+    }
+
+    /**
+     * Process image to PNG with transparent background
+     *
+     * @since 1.1.0
+     * @param string $input_file Path to the input image file
+     * @return string|false Path to the processed image file or false on failure
+     */
+    private function process_image_png_transparent($input_file) {
+        // Check if the Imagick extension is available
+        if (!extension_loaded('imagick')) {
+            error_log('Auto Product Import - Imagick extension is not available. Original image will be used.');
+            return false;
+        }
+        
+        try {
+            // Create new Imagick object
+            $imagick = new \Imagick($input_file);
+            
+            // Set white as the background color to detect and remove
+            $backgroundColor = "rgb(255, 255, 255)";
+            $fuzzFactor = 0.1;
+            
+            // Make sure the image is in the correct color space
+            $imagick->transformImageColorspace(\Imagick::COLORSPACE_SRGB);
+            
+            // Create a copy of the image for background detection
+            $outlineImagick = clone $imagick;
+            
+            // Try to make the background transparent
+            $outlineImagick->transparentPaintImage(
+                $backgroundColor, 0, $fuzzFactor * \Imagick::getQuantum(), false
+            );
+            
+            // Create a mask from the original image
+            $mask = clone $imagick;
+            
+            // Deactivate alpha channel if exists
+            $mask->setImageAlphaChannel(\Imagick::ALPHACHANNEL_DEACTIVATE);
+            
+            // Convert to grayscale
+            $mask->transformImageColorspace(\Imagick::COLORSPACE_GRAY);
+            
+            // Apply the outline to create a cookie-cutter effect
+            $mask->compositeImage(
+                $outlineImagick,
+                \Imagick::COMPOSITE_DSTOUT,
+                0, 0
+            );
+            
+            // Negate the mask to have white for objects and black for background
+            $mask->negateImage(false);
+            
+            // Improve the edge detection
+            $mask->blurImage(2, 2);
+            
+            // Apply contrast to make edges more defined
+            $contrast = 15;
+            $midpoint = 0.7 * \Imagick::getQuantum();
+            $mask->sigmoidalContrastImage(true, $contrast, $midpoint);
+            
+            // Apply the mask to the original image
+            $imagick->compositeImage(
+                $mask,
+                \Imagick::COMPOSITE_COPYOPACITY,
+                0, 0
+            );
+            
+            // Set the output format to PNG
+            $imagick->setImageFormat('png');
+            
+            // Create a temporary file for the processed image
+            $output_file = $input_file . '_processed.png';
+            
+            // Save the processed image
+            $imagick->writeImage($output_file);
+            
+            // Free up memory
+            $imagick->clear();
+            $outlineImagick->clear();
+            $mask->clear();
+            
+            return $output_file;
+        } catch (\Exception $e) {
+            error_log('Auto Product Import - Failed to process image to PNG with transparent background: ' . $e->getMessage());
+            return false;
+        }
     }
 
     /**
