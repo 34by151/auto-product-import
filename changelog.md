@@ -2,20 +2,7 @@
 
 All notable changes to the Auto Product Import plugin will be documented in this file.
 
-## 1.2.3 - 2023-04-30
-
-### Added
-- Background color detection for product images
-- Preservation of original image background instead of forcing transparency or black background
-- Intelligent edge analysis for better background color detection
-- Improved GD library fallback that also preserves original background colors
-- Support for detecting colors from the edges of product images
-
-### Fixed
-- Improved handling of images with colored backgrounds
-- More natural appearance for product images like firearms and other items that look better with their original background
-
-## 1.2.2 - 2023-04-27
+## 1.2.2 - 2023-04-20
 
 ### Fixed
 - Added GD library fallback for servers without Imagick extension

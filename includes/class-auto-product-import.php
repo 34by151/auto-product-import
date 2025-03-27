@@ -1155,8 +1155,8 @@ class Auto_Product_Import {
             return false;
         }
         
-        // Process the image to PNG with original background
-        $processed_file = $this->process_image_with_original_background($tmp);
+        // Process the image to PNG with black background
+        $processed_file = $this->process_image_png_black_background($tmp);
         
         // If processing succeeded, use the processed file
         if ($processed_file) {
@@ -1193,163 +1193,120 @@ class Auto_Product_Import {
     }
 
     /**
-     * Process image while preserving the original background color
+     * Process image to PNG with black background
      *
-     * @since 1.2.3
+     * @since 1.2.1
      * @param string $input_file Path to the input image file
      * @return string|false Path to the processed image file or false on failure
      */
-    private function process_image_with_original_background($input_file) {
-        // Check if the Imagick extension is available
+    private function process_image_png_black_background($input_file) {
+        // Check if the Imagick extension is available with more detailed checks
         if (!extension_loaded('imagick') || !class_exists('\\Imagick')) {
             error_log('Auto Product Import - Imagick extension is not available. Using GD library fallback.');
-            return $this->process_image_with_gd_original_background($input_file);
+            return $this->process_image_with_gd_fallback($input_file);
         }
         
         try {
             // Create new Imagick object
             $imagick = new \Imagick($input_file);
             
+            // Set white as the background color to detect and remove
+            $backgroundColor = "rgb(255, 255, 255)";
+            $blackColor = "rgb(0, 0, 0)"; // Black background color
+            $fuzzFactor = 0.1;
+            
             // Make sure the image is in the correct color space
             $imagick->transformImageColorspace(\Imagick::COLORSPACE_SRGB);
             
-            // Analyze the image to detect the background color
-            $backgroundColor = $this->detect_background_color($imagick);
+            // Create a copy of the image for background detection
+            $outlineImagick = clone $imagick;
             
-            // If background color detection failed, use a default (white)
-            if (!$backgroundColor) {
-                $backgroundColor = "rgb(255, 255, 255)";
-            }
+            // Try to make the background transparent first to identify it
+            $outlineImagick->transparentPaintImage(
+                $backgroundColor, 0, $fuzzFactor * \Imagick::getQuantum(), false
+            );
             
-            error_log("Detected background color: " . $backgroundColor);
+            // Create a mask from the original image
+            $mask = clone $imagick;
             
-            // Create a canvas with the detected background color
-            $canvas = new \Imagick();
-            $canvas->newImage(
+            // Deactivate alpha channel if exists
+            $mask->setImageAlphaChannel(\Imagick::ALPHACHANNEL_DEACTIVATE);
+            
+            // Convert to grayscale
+            $mask->transformImageColorspace(\Imagick::COLORSPACE_GRAY);
+            
+            // Apply the outline to create a cookie-cutter effect
+            $mask->compositeImage(
+                $outlineImagick,
+                \Imagick::COMPOSITE_DSTOUT,
+                0, 0
+            );
+            
+            // Negate the mask to have white for objects and black for background
+            $mask->negateImage(false);
+            
+            // Improve the edge detection
+            $mask->blurImage(2, 2);
+            
+            // Apply contrast to make edges more defined
+            $contrast = 15;
+            $midpoint = 0.7 * \Imagick::getQuantum();
+            $mask->sigmoidalContrastImage(true, $contrast, $midpoint);
+            
+            // Create a new black canvas of the same size
+            $blackCanvas = new \Imagick();
+            $blackCanvas->newImage(
                 $imagick->getImageWidth(),
                 $imagick->getImageHeight(),
-                new \ImagickPixel($backgroundColor),
+                $blackColor,
                 'png'
             );
             
-            // Set the output format to PNG
-            $canvas->setImageFormat('png');
+            // Apply the mask to get the object without background
+            $imagick->compositeImage(
+                $mask,
+                \Imagick::COMPOSITE_COPYOPACITY,
+                0, 0
+            );
             
-            // Place the image on the canvas
-            $canvas->compositeImage(
+            // Place the extracted object on the black canvas
+            $blackCanvas->compositeImage(
                 $imagick,
                 \Imagick::COMPOSITE_OVER,
                 0, 0
             );
             
+            // Set the output format to PNG
+            $blackCanvas->setImageFormat('png');
+            
             // Create a temporary file for the processed image
             $output_file = $input_file . '_processed.png';
             
             // Save the processed image
-            $canvas->writeImage($output_file);
+            $blackCanvas->writeImage($output_file);
             
             // Free up memory
             $imagick->clear();
-            $canvas->clear();
+            $outlineImagick->clear();
+            $mask->clear();
+            $blackCanvas->clear();
             
             return $output_file;
         } catch (\Exception $e) {
             error_log('Auto Product Import - Imagick processing failed: ' . $e->getMessage());
             // Try fallback method if Imagick processing fails
-            return $this->process_image_with_gd_original_background($input_file);
+            return $this->process_image_with_gd_fallback($input_file);
         }
     }
     
     /**
-     * Detect the predominant background color of an image
+     * Fallback image processing using GD library
      *
-     * @since 1.2.3
-     * @param \Imagick $imagick The Imagick object of the image to analyze
-     * @return string|false The background color in rgb format, or false on failure
-     */
-    private function detect_background_color($imagick) {
-        try {
-            // Create a small thumbnail for faster processing
-            $thumbnail = clone $imagick;
-            $thumbnail->thumbnailImage(100, 100, true);
-            
-            // Sample pixels from the edges to determine background color
-            $colors = [];
-            $width = $thumbnail->getImageWidth();
-            $height = $thumbnail->getImageHeight();
-            
-            // Sample top edge
-            for ($x = 0; $x < $width; $x += 5) {
-                $pixel = $thumbnail->getImagePixelColor($x, 0);
-                $rgba = $pixel->getColor();
-                $key = $rgba['r'] . ',' . $rgba['g'] . ',' . $rgba['b'];
-                if (!isset($colors[$key])) {
-                    $colors[$key] = 0;
-                }
-                $colors[$key]++;
-            }
-            
-            // Sample bottom edge
-            for ($x = 0; $x < $width; $x += 5) {
-                $pixel = $thumbnail->getImagePixelColor($x, $height - 1);
-                $rgba = $pixel->getColor();
-                $key = $rgba['r'] . ',' . $rgba['g'] . ',' . $rgba['b'];
-                if (!isset($colors[$key])) {
-                    $colors[$key] = 0;
-                }
-                $colors[$key]++;
-            }
-            
-            // Sample left edge
-            for ($y = 0; $y < $height; $y += 5) {
-                $pixel = $thumbnail->getImagePixelColor(0, $y);
-                $rgba = $pixel->getColor();
-                $key = $rgba['r'] . ',' . $rgba['g'] . ',' . $rgba['b'];
-                if (!isset($colors[$key])) {
-                    $colors[$key] = 0;
-                }
-                $colors[$key]++;
-            }
-            
-            // Sample right edge
-            for ($y = 0; $y < $height; $y += 5) {
-                $pixel = $thumbnail->getImagePixelColor($width - 1, $y);
-                $rgba = $pixel->getColor();
-                $key = $rgba['r'] . ',' . $rgba['g'] . ',' . $rgba['b'];
-                if (!isset($colors[$key])) {
-                    $colors[$key] = 0;
-                }
-                $colors[$key]++;
-            }
-            
-            // Find the most frequent color (likely the background)
-            arsort($colors);
-            $dominant_color = key($colors);
-            
-            // Free memory
-            $thumbnail->clear();
-            
-            // Return the background color in rgb format
-            if ($dominant_color) {
-                list($r, $g, $b) = explode(',', $dominant_color);
-                return "rgb($r,$g,$b)";
-            }
-            
-            return false;
-        } catch (\Exception $e) {
-            error_log('Auto Product Import - Background color detection failed: ' . $e->getMessage());
-            return false;
-        }
-    }
-    
-    /**
-     * GD fallback for processing images with original background
-     *
-     * @since 1.2.3
+     * @since 1.2.1
      * @param string $input_file Path to the input image file
      * @return string|false Path to the processed image file or false on failure
      */
-    private function process_image_with_gd_original_background($input_file) {
+    private function process_image_with_gd_fallback($input_file) {
         // Check if GD library is available
         if (!extension_loaded('gd') || !function_exists('imagecreatefrompng')) {
             error_log('Auto Product Import - Neither Imagick nor GD are available. Cannot process image.');
@@ -1397,54 +1354,18 @@ class Auto_Product_Import {
             $width = imagesx($source);
             $height = imagesy($source);
             
-            // Get the background color from corners of the image
-            $bg_colors = [];
-            
-            // Sample top-left corner
-            $rgb = imagecolorat($source, 0, 0);
-            $r = ($rgb >> 16) & 0xFF;
-            $g = ($rgb >> 8) & 0xFF;
-            $b = $rgb & 0xFF;
-            $key = "$r,$g,$b";
-            $bg_colors[$key] = isset($bg_colors[$key]) ? $bg_colors[$key] + 1 : 1;
-            
-            // Sample top-right corner
-            $rgb = imagecolorat($source, $width - 1, 0);
-            $r = ($rgb >> 16) & 0xFF;
-            $g = ($rgb >> 8) & 0xFF;
-            $b = $rgb & 0xFF;
-            $key = "$r,$g,$b";
-            $bg_colors[$key] = isset($bg_colors[$key]) ? $bg_colors[$key] + 1 : 1;
-            
-            // Sample bottom-left corner
-            $rgb = imagecolorat($source, 0, $height - 1);
-            $r = ($rgb >> 16) & 0xFF;
-            $g = ($rgb >> 8) & 0xFF;
-            $b = $rgb & 0xFF;
-            $key = "$r,$g,$b";
-            $bg_colors[$key] = isset($bg_colors[$key]) ? $bg_colors[$key] + 1 : 1;
-            
-            // Sample bottom-right corner
-            $rgb = imagecolorat($source, $width - 1, $height - 1);
-            $r = ($rgb >> 16) & 0xFF;
-            $g = ($rgb >> 8) & 0xFF;
-            $b = $rgb & 0xFF;
-            $key = "$r,$g,$b";
-            $bg_colors[$key] = isset($bg_colors[$key]) ? $bg_colors[$key] + 1 : 1;
-            
-            // Find the most common color
-            arsort($bg_colors);
-            $dominant_bg = key($bg_colors);
-            list($r, $g, $b) = explode(',', $dominant_bg);
-            
-            // Create a new image
+            // Create a new image with black background
             $new_image = imagecreatetruecolor($width, $height);
             
-            // Fill with detected background color
-            $bg_color = imagecolorallocate($new_image, $r, $g, $b);
-            imagefill($new_image, 0, 0, $bg_color);
+            // Fill with black background
+            $black = imagecolorallocate($new_image, 0, 0, 0);
+            imagefill($new_image, 0, 0, $black);
             
-            // Copy the original image onto the new canvas
+            // Enable alpha blending
+            imagealphablending($new_image, true);
+            imagesavealpha($new_image, true);
+            
+            // Copy the original image onto the black background
             imagecopy($new_image, $source, 0, 0, 0, 0, $width, $height);
             
             // Create a temporary file for the processed image
