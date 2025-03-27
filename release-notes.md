@@ -1,10 +1,6 @@
-# Changelog
+# Auto Product Import v1.1.1
 
-All notable changes to the Auto Product Import plugin will be documented in this file.
-
-## 1.1.1 - 2023-04-01
-
-### Fixed
+## Fixed
 - Resolved issue with no images being extracted from product pages
 - Fixed undefined property and method errors in image extraction code
 - Corrected parameter handling in image extraction functions
@@ -12,13 +8,13 @@ All notable changes to the Auto Product Import plugin will be documented in this
 - Enhanced BigCommerce-specific selectors for thumbnail images
 - Implemented safer DOM attribute checks with domHasAttribute and domGetAttribute
 
-### Added
+## Added
 - Improved test script for verifying image extraction functionality
 - More robust error handling and debugging for image extraction
 
-## 1.1.0 - 2023-03-24
+# Auto Product Import v1.1.0
 
-### Added
+## Added
 - BigCommerce-specific selectors for product images extraction
 - Support for `data-image-gallery-new-image-url` attribute for high-quality images
 - Auto-conversion of image URLs to higher resolution (1280x1280)
@@ -28,23 +24,14 @@ All notable changes to the Auto Product Import plugin will be documented in this
 - Detailed documentation of image extraction improvements
 - Detection and filtering of images from "Related Products" sections
 
-### Fixed
+## Fixed
 - Resolved issue with extracting only one product image instead of all available images
 - Fixed DOM method errors with getAttribute and hasAttribute calls
 - Improved filtering to exclude irrelevant images from results
 - Prevented extraction of images from related products, similar items, and recommended products sections
 
-### Changed
+## Changed
 - Restructured image extraction logic with a multi-tier prioritization approach
 - Enhanced validation of image URLs with pattern matching
 - Implemented more robust filtering for non-product images
-- Added DOM structure analysis to identify and exclude related products containers
-
-## 1.0.0 - Initial Release
-
-### Added
-- Initial plugin functionality
-- Basic product extraction from URLs
-- WooCommerce product creation
-- Admin interface for importing products
-- Shortcode for frontend product import form 
+- Added DOM structure analysis to identify and exclude related products containers 

@@ -3,7 +3,7 @@
  * Plugin Name: Auto Product Import
  * Plugin URI: https://github.com/kadafs
  * Description: Automatically add WooCommerce products from URLs
- * Version: 1.2.2
+ * Version: 1.1.0
  * Author: Kadafs
  * Author URI: https://github.com/kadafs
  * Text Domain: auto-product-import
@@ -20,7 +20,7 @@ if (!defined('WPINC')) {
 }
 
 // Define plugin constants
-define('AUTO_PRODUCT_IMPORT_VERSION', '1.2.2');
+define('AUTO_PRODUCT_IMPORT_VERSION', '1.1.0');
 define('AUTO_PRODUCT_IMPORT_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('AUTO_PRODUCT_IMPORT_PLUGIN_URL', plugin_dir_url(__FILE__));
 
