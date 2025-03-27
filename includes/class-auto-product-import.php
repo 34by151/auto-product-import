@@ -1155,8 +1155,8 @@ class Auto_Product_Import {
             return false;
         }
         
-        // Process the image to PNG with transparent background
-        $processed_file = $this->process_image_png_transparent($tmp);
+        // Process the image to PNG with black background
+        $processed_file = $this->process_image_png_black_background($tmp);
         
         // If processing succeeded, use the processed file
         if ($processed_file) {
@@ -1193,13 +1193,13 @@ class Auto_Product_Import {
     }
 
     /**
-     * Process image to PNG with transparent background
+     * Process image to PNG with black background
      *
-     * @since 1.1.0
+     * @since 1.2.1
      * @param string $input_file Path to the input image file
      * @return string|false Path to the processed image file or false on failure
      */
-    private function process_image_png_transparent($input_file) {
+    private function process_image_png_black_background($input_file) {
         // Check if the Imagick extension is available
         if (!extension_loaded('imagick')) {
             error_log('Auto Product Import - Imagick extension is not available. Original image will be used.');
@@ -1212,6 +1212,7 @@ class Auto_Product_Import {
             
             // Set white as the background color to detect and remove
             $backgroundColor = "rgb(255, 255, 255)";
+            $blackColor = "rgb(0, 0, 0)"; // Black background color
             $fuzzFactor = 0.1;
             
             // Make sure the image is in the correct color space
@@ -1220,7 +1221,7 @@ class Auto_Product_Import {
             // Create a copy of the image for background detection
             $outlineImagick = clone $imagick;
             
-            // Try to make the background transparent
+            // Try to make the background transparent first to identify it
             $outlineImagick->transparentPaintImage(
                 $backgroundColor, 0, $fuzzFactor * \Imagick::getQuantum(), false
             );
@@ -1252,30 +1253,47 @@ class Auto_Product_Import {
             $midpoint = 0.7 * \Imagick::getQuantum();
             $mask->sigmoidalContrastImage(true, $contrast, $midpoint);
             
-            // Apply the mask to the original image
+            // Create a new black canvas of the same size
+            $blackCanvas = new \Imagick();
+            $blackCanvas->newImage(
+                $imagick->getImageWidth(),
+                $imagick->getImageHeight(),
+                $blackColor,
+                'png'
+            );
+            
+            // Apply the mask to get the object without background
             $imagick->compositeImage(
                 $mask,
                 \Imagick::COMPOSITE_COPYOPACITY,
                 0, 0
             );
             
+            // Place the extracted object on the black canvas
+            $blackCanvas->compositeImage(
+                $imagick,
+                \Imagick::COMPOSITE_OVER,
+                0, 0
+            );
+            
             // Set the output format to PNG
-            $imagick->setImageFormat('png');
+            $blackCanvas->setImageFormat('png');
             
             // Create a temporary file for the processed image
             $output_file = $input_file . '_processed.png';
             
             // Save the processed image
-            $imagick->writeImage($output_file);
+            $blackCanvas->writeImage($output_file);
             
             // Free up memory
             $imagick->clear();
             $outlineImagick->clear();
             $mask->clear();
+            $blackCanvas->clear();
             
             return $output_file;
         } catch (\Exception $e) {
-            error_log('Auto Product Import - Failed to process image to PNG with transparent background: ' . $e->getMessage());
+            error_log('Auto Product Import - Failed to process image to PNG with black background: ' . $e->getMessage());
             return false;
         }
     }

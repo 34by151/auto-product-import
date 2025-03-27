@@ -2,6 +2,13 @@
 
 All notable changes to the Auto Product Import plugin will be documented in this file.
 
+## 1.2.1 - 2023-04-18
+
+### Changed
+- Modified image processing to use a solid black background instead of transparent background
+- Improved product object extraction from backgrounds for better contrast
+- Enhanced edge detection for cleaner outlines against the black background
+
 ## 1.2.0 - 2023-04-15
 
 ### Added
