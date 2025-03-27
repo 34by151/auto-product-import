@@ -2,6 +2,15 @@
 
 All notable changes to the Auto Product Import plugin will be documented in this file.
 
+## 1.2.2 - 2023-04-20
+
+### Fixed
+- Added GD library fallback for servers without Imagick extension
+- Improved error handling in image processing
+- Enhanced compatibility with different PHP configurations
+- More robust image type detection and conversion
+- Detailed error logging for easier troubleshooting
+
 ## 1.2.1 - 2023-04-18
 
 ### Changed

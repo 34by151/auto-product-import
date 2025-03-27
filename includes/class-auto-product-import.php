@@ -1200,10 +1200,10 @@ class Auto_Product_Import {
      * @return string|false Path to the processed image file or false on failure
      */
     private function process_image_png_black_background($input_file) {
-        // Check if the Imagick extension is available
-        if (!extension_loaded('imagick')) {
-            error_log('Auto Product Import - Imagick extension is not available. Original image will be used.');
-            return false;
+        // Check if the Imagick extension is available with more detailed checks
+        if (!extension_loaded('imagick') || !class_exists('\\Imagick')) {
+            error_log('Auto Product Import - Imagick extension is not available. Using GD library fallback.');
+            return $this->process_image_with_gd_fallback($input_file);
         }
         
         try {
@@ -1293,7 +1293,99 @@ class Auto_Product_Import {
             
             return $output_file;
         } catch (\Exception $e) {
-            error_log('Auto Product Import - Failed to process image to PNG with black background: ' . $e->getMessage());
+            error_log('Auto Product Import - Imagick processing failed: ' . $e->getMessage());
+            // Try fallback method if Imagick processing fails
+            return $this->process_image_with_gd_fallback($input_file);
+        }
+    }
+    
+    /**
+     * Fallback image processing using GD library
+     *
+     * @since 1.2.1
+     * @param string $input_file Path to the input image file
+     * @return string|false Path to the processed image file or false on failure
+     */
+    private function process_image_with_gd_fallback($input_file) {
+        // Check if GD library is available
+        if (!extension_loaded('gd') || !function_exists('imagecreatefrompng')) {
+            error_log('Auto Product Import - Neither Imagick nor GD are available. Cannot process image.');
+            return false;
+        }
+        
+        try {
+            // Get image info
+            $image_info = getimagesize($input_file);
+            if (!$image_info) {
+                error_log('Auto Product Import - Failed to get image info in GD fallback.');
+                return false;
+            }
+            
+            // Create source image based on type
+            switch ($image_info[2]) {
+                case IMAGETYPE_JPEG:
+                    $source = imagecreatefromjpeg($input_file);
+                    break;
+                case IMAGETYPE_PNG:
+                    $source = imagecreatefrompng($input_file);
+                    break;
+                case IMAGETYPE_GIF:
+                    $source = imagecreatefromgif($input_file);
+                    break;
+                case IMAGETYPE_WEBP:
+                    if (function_exists('imagecreatefromwebp')) {
+                        $source = imagecreatefromwebp($input_file);
+                    } else {
+                        error_log('Auto Product Import - WEBP format not supported in this PHP version.');
+                        return false;
+                    }
+                    break;
+                default:
+                    error_log('Auto Product Import - Unsupported image format in GD fallback.');
+                    return false;
+            }
+            
+            if (!$source) {
+                error_log('Auto Product Import - Failed to create source image in GD fallback.');
+                return false;
+            }
+            
+            // Get dimensions
+            $width = imagesx($source);
+            $height = imagesy($source);
+            
+            // Create a new image with black background
+            $new_image = imagecreatetruecolor($width, $height);
+            
+            // Fill with black background
+            $black = imagecolorallocate($new_image, 0, 0, 0);
+            imagefill($new_image, 0, 0, $black);
+            
+            // Enable alpha blending
+            imagealphablending($new_image, true);
+            imagesavealpha($new_image, true);
+            
+            // Copy the original image onto the black background
+            imagecopy($new_image, $source, 0, 0, 0, 0, $width, $height);
+            
+            // Create a temporary file for the processed image
+            $output_file = $input_file . '_gd_processed.png';
+            
+            // Save as PNG
+            $result = imagepng($new_image, $output_file, 9); // Highest compression
+            
+            // Free memory
+            imagedestroy($source);
+            imagedestroy($new_image);
+            
+            if (!$result) {
+                error_log('Auto Product Import - Failed to save processed image in GD fallback.');
+                return false;
+            }
+            
+            return $output_file;
+        } catch (\Exception $e) {
+            error_log('Auto Product Import - GD fallback failed: ' . $e->getMessage());
             return false;
         }
     }
