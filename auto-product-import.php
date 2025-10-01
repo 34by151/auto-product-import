@@ -3,13 +3,13 @@
  * Plugin Name: Auto Product Import
  * Plugin URI: https://github.com/kadafs
  * Description: Automatically add WooCommerce products from URLs
- * Version: 1.1.0
- * Author: Kadafs
+ * Version: 2.0.0
+ * Author: Kadafs, ArtInMetal
  * Author URI: https://github.com/kadafs
  * Text Domain: auto-product-import
  * Domain Path: /languages
- * WC requires at least: 3.0.0
- * WC tested up to: 8.0.0
+ * WC requires at least: 6.0.0
+ * WC tested up to: 9.0.0
  * Requires at least: 5.0
  * Requires PHP: 7.2
  */
@@ -20,9 +20,31 @@ if (!defined('WPINC')) {
 }
 
 // Define plugin constants
-define('AUTO_PRODUCT_IMPORT_VERSION', '1.1.0');
+define('AUTO_PRODUCT_IMPORT_VERSION', '2.0.0');
 define('AUTO_PRODUCT_IMPORT_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('AUTO_PRODUCT_IMPORT_PLUGIN_URL', plugin_dir_url(__FILE__));
+
+/**
+ * Declare HPOS (High-Performance Order Storage) compatibility
+ * 
+ * Although this plugin manages product imports (not orders), WooCommerce requires
+ * all active plugins to explicitly declare HPOS compatibility to prevent warnings.
+ * 
+ * This plugin is fully compatible with HPOS because:
+ * - It only works with WooCommerce products (custom post types)
+ * - Products remain as posts even with HPOS enabled
+ * - HPOS specifically handles order storage, not product storage
+ * - All WooCommerce API calls are compatible with HPOS-enabled stores
+ */
+add_action('before_woocommerce_init', function() {
+    if (class_exists('\Automattic\WooCommerce\Utilities\FeaturesUtil')) {
+        \Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility(
+            'custom_order_tables',
+            __FILE__,
+            true
+        );
+    }
+});
 
 // Check if WooCommerce is active
 function auto_product_import_check_woocommerce() {
@@ -68,4 +90,4 @@ function auto_product_import_init() {
     // Initialize the main plugin class
     $auto_product_import = new Auto_Product_Import();
     $auto_product_import->init();
-} 
+}
