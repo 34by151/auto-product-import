@@ -1,0 +1,31 @@
+{
+	"translation-revision-date": "YEAR-MO-DA HO:MI+ZONE",
+	"generator": "WP-CLI/2.12.0",
+	"source": "assets/js/utils/index.js",
+	"domain": "messages",
+	"locale_data": {
+		"messages": {
+			"": {
+				"domain": "messages",
+				"lang": "nl_NL",
+				"plural-forms": "nplurals=2; plural=(n != 1);"
+			},
+			"Total items quantity should be at least %d or more.": [
+				"De totale hoeveelheid items moet minimaal %d of meer zijn."
+			],
+			"Total items quantity should not exceed %d.": [
+				"De totale hoeveelheid items mag niet meer dan %d zijn."
+			],
+			"Required bundle item is invalid or out of stock.": [
+				"Vereist bundelitem is ongeldig of niet op voorraad."
+			],
+			"Please select a purchasable product for all of the required items.": [
+				"Selecteer een aankoopbaar product voor alle vereiste items."
+			],
+			"Bundle items input element not found.": [
+				"Invoerelement voor bundelitems niet gevonden."
+			],
+			"No bundle items available.": [ "Geen bundelitems beschikbaar." ]
+		}
+	}
+}

@@ -1,0 +1,30 @@
+{
+	"translation-revision-date": "YEAR-MO-DA HO:MI+ZONE",
+	"generator": "WP-CLI/2.5.0",
+	"source": "assets/js/product/index.js",
+	"domain": "messages",
+	"locale_data": {
+		"messages": {
+			"": {
+				"domain": "messages",
+				"lang": "zh_CN",
+				"plural-forms": "nplurals=2; plural=(n != 1);"
+			},
+			"Optional": [ "可选" ],
+			"Delete": [ "删除" ],
+			"Bundle item image": [ "捆绑商品图片" ],
+			"Total items quantity should be at least %d or more.": [
+				"总数量应至少为 %d 或更多。"
+			],
+			"Total items quantity should not exceed %d.": [
+				"总数量不得超过 %d。"
+			],
+			"Product information": [ "产品信息" ],
+			"Add product": [ "添加产品" ],
+			"Update product": [ "更新产品" ],
+			"Add%s": [ "添加%s" ],
+			"Choose %s": [ "选择 %s" ],
+			"Please select a product!": [ "请选择产品！" ]
+		}
+	}
+}

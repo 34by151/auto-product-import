@@ -1,0 +1,33 @@
+{
+	"translation-revision-date": "YEAR-MO-DA HO:MI+ZONE",
+	"generator": "WP-CLI/2.12.0",
+	"source": "assets/js/utils/index.js",
+	"domain": "messages",
+	"locale_data": {
+		"messages": {
+			"": {
+				"domain": "messages",
+				"lang": "da_DK",
+				"plural-forms": "nplurals=2; plural=(n != 1);"
+			},
+			"Total items quantity should be at least %d or more.": [
+				"Det samlede antal varer skal være mindst %d eller mere."
+			],
+			"Total items quantity should not exceed %d.": [
+				"Det samlede antal varer må ikke overstige %d."
+			],
+			"Required bundle item is invalid or out of stock.": [
+				"Påkrævet bundtgenstand er ugyldig eller udsolgt."
+			],
+			"Please select a purchasable product for all of the required items.": [
+				"Vælg venligst et købsværdigt produkt for alle de påkrævede varer."
+			],
+			"Bundle items input element not found.": [
+				"Input-elementet for bundtgenstande blev ikke fundet."
+			],
+			"No bundle items available.": [
+				"Ingen bundtgenstande tilgængelige."
+			]
+		}
+	}
+}

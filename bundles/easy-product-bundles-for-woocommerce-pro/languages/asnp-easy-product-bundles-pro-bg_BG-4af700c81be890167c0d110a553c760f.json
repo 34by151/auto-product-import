@@ -1,0 +1,30 @@
+{
+	"translation-revision-date": "YEAR-MO-DA HO:MI+ZONE",
+	"generator": "WP-CLI/2.5.0",
+	"source": "assets/js/product/index.js",
+	"domain": "messages",
+	"locale_data": {
+		"messages": {
+			"": {
+				"domain": "messages",
+				"lang": "bg_BG",
+				"plural-forms": "nplurals=2; plural=(n != 1);"
+			},
+			"Bundle item image": [ "Снимка на комплекта" ],
+			"Optional": [ "по избор" ],
+			"Delete": [ "Изтрий" ],
+			"Product information": [ "Информация за продукта" ],
+			"Total items quantity should be at least %d or more.": [
+				"Общото количество на артикулите трябва да бъде поне %d или повече."
+			],
+			"Total items quantity should not exceed %d.": [
+				"Общото количество на артикулите не трябва да надвишава %d."
+			],
+			"Add product": [ "Добави продукт" ],
+			"Update product": [ "Актуализирай продукта" ],
+			"Add%s": [ "Добави%s" ],
+			"Choose %s": [ "Избери %s" ],
+			"Please select a product!": [ "Моля, изберете продукт!" ]
+		}
+	}
+}

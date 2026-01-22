@@ -1,0 +1,30 @@
+{
+	"translation-revision-date": "YEAR-MO-DA HO:MI+ZONE",
+	"generator": "WP-CLI/2.5.0",
+	"source": "assets/js/product/index.js",
+	"domain": "messages",
+	"locale_data": {
+		"messages": {
+			"": {
+				"domain": "messages",
+				"lang": "it_IT",
+				"plural-forms": "nplurals=2; plural=(n != 1);"
+			},
+			"Bundle item image": [ "Immagine dell'articolo del bundle" ],
+			"Optional": [ "opzionale" ],
+			"Delete": [ "Elimina" ],
+			"Product information": [ "Informazioni sul prodotto" ],
+			"Total items quantity should be at least %d or more.": [
+				"La quantità totale degli elementi deve essere almeno %d o più."
+			],
+			"Total items quantity should not exceed %d.": [
+				"La quantità totale degli elementi non deve superare %d."
+			],
+			"Add product": [ "Aggiungi prodotto" ],
+			"Update product": [ "Aggiorna prodotto" ],
+			"Add%s": [ "Aggiungi%s" ],
+			"Choose %s": [ "Scegli %s" ],
+			"Please select a product!": [ "seleziona un prodotto!" ]
+		}
+	}
+}

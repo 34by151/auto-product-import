@@ -1,0 +1,168 @@
+# Copyright (C) 2025 Product Bundles Team
+# This file is distributed under the http://www.gnu.org/licenses/gpl-2.0.html.
+msgid ""
+msgstr ""
+"Project-Id-Version: Easy Product Bundles Pro for WooCommerce 6.9.0\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/easy-product-"
+"bundles-for-woocommerce-pro\n"
+"POT-Creation-Date: 2025-09-10T19:36:25+00:00\n"
+"PO-Revision-Date: 2025-09-11 00:40+0330\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: fr_FR\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 3.7\n"
+"X-Domain: asnp-easy-product-bundles-pro\n"
+
+#. Plugin Name of the plugin
+#: easy-product-bundles-pro.php
+msgid "Easy Product Bundles Pro for WooCommerce"
+msgstr ""
+
+#. Plugin URI of the plugin
+#: easy-product-bundles-pro.php
+msgid ""
+"https://www.asanaplugins.com/product/woocommerce-product-bundles/?"
+"utm_source=easy-product-bundles-woocommerce-plugin&utm_campaign=easy-product-"
+"bundles-woocommerce&utm_medium=link"
+msgstr ""
+
+#. Description of the plugin
+#: easy-product-bundles-pro.php
+msgid "Create product bundles in WooCommerce easily"
+msgstr ""
+
+#. Author of the plugin
+#: easy-product-bundles-pro.php
+msgid "Product Bundles Team"
+msgstr ""
+
+#. Author URI of the plugin
+#: easy-product-bundles-pro.php
+msgid "https://www.asanaplugins.com/"
+msgstr ""
+
+#. translators: 1: composer command. 2: plugin directory
+#: easy-product-bundles-pro.php:44 easy-product-bundles-pro.php:62
+#, php-format
+msgid ""
+"Your installation of the Easy Product Bundles Pro plugin is incomplete. "
+"Please run %1$s within the %2$s directory."
+msgstr ""
+
+#: src/Admin/Admin.php:74
+msgid "settings"
+msgstr "Paramètres"
+
+#: src/Admin/Admin.php:76
+#, php-format
+msgid ""
+"To receive automatic updates, license activation is required. Please visit "
+"%s to activate your plugin."
+msgstr ""
+"Pour recevoir les mises à jour automatiques, l’activation de la licence est "
+"requise. Veuillez visiter %s pour activer votre plugin."
+
+#: src/Admin/Admin.php:96
+msgid "Settings"
+msgstr "Paramètres"
+
+#. translators: 1: URL of WooCommerce plugin, 2: The minimum WooCommerce version number
+#: src/Plugin.php:194
+#, php-format
+msgid ""
+"The Easy Product Bundles plugin requires <a href=\"%1$s\">WooCommerce</a> "
+"%2$s or greater to be installed and active."
+msgstr ""
+
+#. translators: 1: URL of Easy Product Bundles plugin, 2: The minimum free version number
+#: src/Plugin.php:203
+#, php-format
+msgid ""
+"The Easy Product Bundles Pro plugin requires <a href=\"%1$s\">Easy Product "
+"Bundles</a> %2$s or greater to be installed and active."
+msgstr ""
+
+#. translators: 1: URL of WordPress.org, 2: The minimum WordPress version number
+#: src/Plugin.php:212
+#, php-format
+msgid ""
+"The Easy Product Bundles plugin requires <a href=\"%1$s\">WordPress</a> %2$s "
+"or greater to be installed and active."
+msgstr ""
+
+#: src/ProductBundleHooks.php:92
+msgid "Please select a product for each of the required bundle items."
+msgstr ""
+"Veuillez sélectionner un produit pour chacun des articles obligatoires du "
+"lot."
+
+#: assets/js/product/index.js:1 assets/js/product/index.js:3635
+#: assets/js/product/index.js:3698
+msgid "Optional"
+msgstr "Optionnel"
+
+#: assets/js/product/index.js:1 assets/js/product/index.js:3673
+#: assets/js/product/index.js:3747
+msgid "Delete"
+msgstr "Supprimer"
+
+#: assets/js/product/index.js:1 assets/js/product/index.js:2530
+msgid "Add%s"
+msgstr "Ajouter%s"
+
+#: assets/js/product/index.js:1 assets/js/product/index.js:3962
+msgid "Update product"
+msgstr "Mettre à jour"
+
+#: assets/js/product/index.js:1 assets/js/product/index.js:3966
+msgid "Add product"
+msgstr "Ajouter le produit"
+
+#: assets/js/product/index.js:1 assets/js/product/index.js:3772
+#: assets/js/product/index.js:4063
+msgid "Product information"
+msgstr "Information produit"
+
+#: assets/js/product/index.js:1 assets/js/product/index.js:4301
+#: assets/js/product/index.js:4351
+msgid "Choose %s"
+msgstr "Choisir %s"
+
+#: assets/js/product/index.js:1 assets/js/utils/index.js:1
+#: assets/js/product/index.js:4979 assets/js/utils/index.js:304
+msgid "Total items quantity should be at least %d or more."
+msgstr "La quantité totale d'articles doit être d'au moins %d ou plus."
+
+#: assets/js/product/index.js:1 assets/js/utils/index.js:1
+#: assets/js/product/index.js:4991 assets/js/utils/index.js:316
+msgid "Total items quantity should not exceed %d."
+msgstr "La quantité totale d'articles ne doit pas dépasser %d."
+
+#: assets/js/utils/index.js:1 assets/js/product/index.js:4816
+#: assets/js/utils/index.js:141
+msgid "Required bundle item is invalid or out of stock."
+msgstr "L'article requis du lot est invalide ou en rupture de stock."
+
+#: assets/js/utils/index.js:1 assets/js/product/index.js:4828
+#: assets/js/utils/index.js:153
+msgid "Please select a purchasable product for all of the required items."
+msgstr ""
+"Veuillez sélectionner un produit achetable pour tous les articles requis."
+
+#: assets/js/utils/index.js:1 assets/js/product/index.js:4892
+#: assets/js/utils/index.js:217
+msgid "Bundle items input element not found."
+msgstr "Élément de saisie des articles du lot introuvable."
+
+#: assets/js/utils/index.js:1 assets/js/product/index.js:4902
+#: assets/js/utils/index.js:227
+msgid "No bundle items available."
+msgstr "Aucun article de lot disponible."
+
+#: assets/js/utils/index.js:1 assets/js/product/index.js:4943
+#: assets/js/utils/index.js:268
+msgid "Please select a product!"
+msgstr "Veuillez sélectionner un produit !"

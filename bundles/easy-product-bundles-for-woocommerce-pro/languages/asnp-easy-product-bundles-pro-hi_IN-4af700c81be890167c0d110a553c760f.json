@@ -1,0 +1,30 @@
+{
+	"translation-revision-date": "YEAR-MO-DA HO:MI+ZONE",
+	"generator": "WP-CLI/2.11.0",
+	"source": "assets/js/product/index.js",
+	"domain": "messages",
+	"locale_data": {
+		"messages": {
+			"": {
+				"domain": "messages",
+				"lang": "hi_IN",
+				"plural-forms": "nplurals=2; plural=(n != 1);"
+			},
+			"Optional": [ "वैकल्पिक" ],
+			"Delete": [ "हटाएं" ],
+			"Bundle item image": [ "बंडल आइटम की छवि" ],
+			"Total items quantity should be at least %d or more.": [
+				"कुल आइटम की मात्रा कम से कम %d या उससे अधिक होनी चाहिए।"
+			],
+			"Total items quantity should not exceed %d.": [
+				"कुल आइटम की मात्रा %d से अधिक नहीं होनी चाहिए।"
+			],
+			"Product information": [ "उत्पाद जानकारी" ],
+			"Add product": [ "उत्पाद जोड़ें" ],
+			"Update product": [ "उत्पाद अपडेट करें" ],
+			"Add%s": [ "%sजोड़ें" ],
+			"Choose %s": [ "%s चुनें" ],
+			"Please select a product!": [ "कृपया एक उत्पाद चुनें!" ]
+		}
+	}
+}

@@ -1,0 +1,29 @@
+{
+	"translation-revision-date": "YEAR-MO-DA HO:MI+ZONE",
+	"generator": "WP-CLI/2.5.0",
+	"source": "assets/js/product/index.js",
+	"domain": "messages",
+	"locale_data": {
+		"messages": {
+			"": {
+				"domain": "messages",
+				"lang": "ja",
+				"plural-forms": "nplurals=2; plural=(n != 1);"
+			},
+			"Optional": [ "オプション" ],
+			"Delete": [ "削除" ],
+			"Bundle item image": [ "バンドルアイテムの画像" ],
+			"Total items quantity should be at least %d or more.": [
+				"アイテムの総数は少なくとも%d以上である必要があります。"
+			],
+			"Total items quantity should not exceed %d.": [
+				"アイテムの総数は%dを超えてはなりません。"
+			],
+			"Product information": [ "製品情報" ],
+			"Update product": [ "商品を更新" ],
+			"Add%s": [ "%sを追加" ],
+			"Choose %s": [ "%s を選択" ],
+			"Please select a product!": [ "製品を選択してください！" ]
+		}
+	}
+}

@@ -1,0 +1,31 @@
+{
+	"translation-revision-date": "YEAR-MO-DA HO:MI+ZONE",
+	"generator": "WP-CLI/2.5.0",
+	"source": "assets/js/product/index.js",
+	"domain": "messages",
+	"locale_data": {
+		"messages": {
+			"": {
+				"domain": "messages",
+				"lang": "fa_IR",
+				"plural-forms": "nplurals=2; plural=(n != 1);"
+			},
+			"Bundle item image": [ "تصویر آیتم بسته‌" ],
+			"Optional": [ "اختیاری" ],
+			"Delete": [ "حذف" ],
+			"Product information": [ "اطلاعات محصول" ],
+			"ADD PRODUCT": [ "افزودن محصول" ],
+			"Total items quantity should be at least %d or more.": [
+				"تعداد کل محصولات باید حداقل %d یا بیشتر باشد."
+			],
+			"Total items quantity should not exceed %d.": [
+				"تعداد کل محصولات نباید بیشتر از %d باشد."
+			],
+			"Add product": [ "افزودن محصول" ],
+			"Update product": [ "به روزرسانی محصول" ],
+			"Add%s": [ "افزودن%s" ],
+			"Choose %s": [ "انتخاب %s" ],
+			"Please select a product!": [ "لطفا یک محصول را انتخاب کنید!" ]
+		}
+	}
+}

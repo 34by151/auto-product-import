@@ -1,0 +1,30 @@
+{
+	"translation-revision-date": "YEAR-MO-DA HO:MI+ZONE",
+	"generator": "WP-CLI/2.5.0",
+	"source": "assets/js/product/index.js",
+	"domain": "messages",
+	"locale_data": {
+		"messages": {
+			"": {
+				"domain": "messages",
+				"lang": "ar",
+				"plural-forms": "nplurals=2; plural=(n != 1);"
+			},
+			"Bundle item image": [ "صورة عنصر الحزمة" ],
+			"Optional": [ "اختياري" ],
+			"Delete": [ "حذف" ],
+			"Product information": [ "معلومات المنتج" ],
+			"Total items quantity should be at least %d or more.": [
+				"يجب أن يكون إجمالي كمية العناصر على الأقل %d أو أكثر."
+			],
+			"Total items quantity should not exceed %d.": [
+				"يجب ألا تتجاوز إجمالي كمية العناصر %d."
+			],
+			"Add product": [ "إضافة منتج" ],
+			"Update product": [ "تحديث المنتج" ],
+			"Add%s": [ "إضافة%s" ],
+			"Choose %s": [ "اختر %s" ],
+			"Please select a product!": [ "يرجى اختيار منتج!" ]
+		}
+	}
+}

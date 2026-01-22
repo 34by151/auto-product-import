@@ -1,0 +1,30 @@
+{
+	"translation-revision-date": "YEAR-MO-DA HO:MI+ZONE",
+	"generator": "WP-CLI/2.5.0",
+	"source": "assets/js/product/index.js",
+	"domain": "messages",
+	"locale_data": {
+		"messages": {
+			"": {
+				"domain": "messages",
+				"lang": "he_IL",
+				"plural-forms": "nplurals=2; plural=(n != 1);"
+			},
+			"Bundle item image": [ "תמונת פריט חבילה" ],
+			"Optional": [ "אופציונלי" ],
+			"Delete": [ "מחק" ],
+			"Product information": [ "מידע על המוצר" ],
+			"Total items quantity should be at least %d or more.": [
+				"סך כמות הפריטים צריך להיות לפחות %d או יותר."
+			],
+			"Total items quantity should not exceed %d.": [
+				"סך כמות הפריטים לא צריך לחרוג מ-%d."
+			],
+			"Add product": [ "הוסף מוצר" ],
+			"Update product": [ "עדכן מוצר" ],
+			"Add%s": [ "הוסף%s" ],
+			"Choose %s": [ "בחר %s" ],
+			"Please select a product!": [ "אנא בחר מוצר!" ]
+		}
+	}
+}

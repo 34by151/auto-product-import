@@ -1,0 +1,31 @@
+{
+	"translation-revision-date": "YEAR-MO-DA HO:MI+ZONE",
+	"generator": "WP-CLI/2.12.0",
+	"source": "assets/js/utils/index.js",
+	"domain": "messages",
+	"locale_data": {
+		"messages": {
+			"": {
+				"domain": "messages",
+				"lang": "tr_TR",
+				"plural-forms": "nplurals=2; plural=(n != 1);"
+			},
+			"Total items quantity should be at least %d or more.": [
+				"Toplam ürün miktarı en az %d veya daha fazla olmalıdır."
+			],
+			"Total items quantity should not exceed %d.": [
+				"Toplam ürün miktarı %d'i aşmamalıdır."
+			],
+			"Required bundle item is invalid or out of stock.": [
+				"Gerekli paket öğesi geçersiz veya stokta yok."
+			],
+			"Please select a purchasable product for all of the required items.": [
+				"Lütfen tüm gerekli öğeler için satın alınabilir bir ürün seçin."
+			],
+			"Bundle items input element not found.": [
+				"Paket öğeleri giriş öğesi bulunamadı."
+			],
+			"No bundle items available.": [ "Kullanılabilir paket öğesi yok." ]
+		}
+	}
+}

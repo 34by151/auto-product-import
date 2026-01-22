@@ -1,0 +1,30 @@
+{
+	"translation-revision-date": "YEAR-MO-DA HO:MI+ZONE",
+	"generator": "WP-CLI/2.5.0",
+	"source": "assets/js/product/index.js",
+	"domain": "messages",
+	"locale_data": {
+		"messages": {
+			"": {
+				"domain": "messages",
+				"lang": "tr_TR",
+				"plural-forms": "nplurals=2; plural=(n != 1);"
+			},
+			"Bundle item image": [ "Paket öğe resmi" ],
+			"Optional": [ "İsteğe bağlı" ],
+			"Delete": [ "Silmek" ],
+			"Product information": [ "Ürün bilgisi" ],
+			"Total items quantity should be at least %d or more.": [
+				"Toplam ürün miktarı en az %d veya daha fazla olmalıdır."
+			],
+			"Total items quantity should not exceed %d.": [
+				"Toplam ürün miktarı %d'i aşmamalıdır."
+			],
+			"Add product": [ "Ürün ekle" ],
+			"Update product": [ "Ürünü güncelle" ],
+			"Add%s": [ "%sEkle" ],
+			"Choose %s": [ "%s Seç" ],
+			"Please select a product!": [ "Lütfen bir ürün seçiniz!" ]
+		}
+	}
+}

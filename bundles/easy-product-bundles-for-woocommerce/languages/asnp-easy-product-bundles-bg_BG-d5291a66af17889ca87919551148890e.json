@@ -1,0 +1,54 @@
+{
+	"translation-revision-date": "YEAR-MO-DA HO:MI+ZONE",
+	"generator": "WP-CLI/2.5.0",
+	"source": "assets/js/product/index.js",
+	"domain": "messages",
+	"locale_data": {
+		"messages": {
+			"": {
+				"domain": "messages",
+				"lang": "bg_BG",
+				"plural-forms": "nplurals=2; plural=(n != 1);"
+			},
+			"Product ID is required.": [ "Изисква се ID на продукта" ],
+			"Parent product ID is required.": [
+				"Изисква се идентификатор на родителски продукт."
+			],
+			"Item index is required.": [ "Изисква се индекс на артикула." ],
+			"There was an error on getting items.": [
+				"Възникна грешка при получаване на елементи."
+			],
+			"Args is required.": [ "Изискват се аргументи." ],
+			"Prev": [ "Предишен" ],
+			"Next": [ "Следващ" ],
+			"OUT OF STOCK": [ "ИЗЧЕРПАНО ОТ НАЛИЧНОСТИ" ],
+			"Bundle item image": [ "Изображение на продукт от комплект" ],
+			"Add": [ "Добави" ],
+			"Add%s": [ "Добави%s" ],
+			"Change": [ "Промени" ],
+			"View": [ "Преглед" ],
+			"Please select a product for all items.": [
+				"Моля, изберете продукт за всички артикули."
+			],
+			"Save": [ "Спести" ],
+			"Edit product": [ "Редактирай продукт" ],
+			"Close": [ "Затвори" ],
+			"Back": [ "Назад" ],
+			"More pictures": [ "Още снимки" ],
+			"Please select a purchasable variation for %s before adding bundle to the cart.": [
+				"Моля, изберете вариант за покупка на %s, преди да добавите пакета в количката."
+			],
+			"Please select a purchasable product for %s before adding bundle to the cart.": [
+				"Моля, изберете продукт, който може да се закупи за %s, преди да добавите комплекта в кошницата."
+			],
+			"Empty bundle!": [ "Празен комплект!" ],
+			"Show Options": [ "Показване на опциите" ],
+			"Please select a product!": [ "Моля, изберете продукт!" ],
+			"Search...": [ "Търсене..." ],
+			"No products found": [ "Не са намерени продукти" ],
+			"Buy all for:": [ "Купи всички за:" ],
+			"Total:": [ "Общо:" ],
+			"% OFF": [ "% OFF" ]
+		}
+	}
+}

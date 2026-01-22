@@ -1,0 +1,50 @@
+{
+	"translation-revision-date": "YEAR-MO-DA HO:MI+ZONE",
+	"generator": "WP-CLI/2.5.0",
+	"source": "assets/js/shared/index.js",
+	"domain": "messages",
+	"locale_data": {
+		"messages": {
+			"": {
+				"domain": "messages",
+				"lang": "zh_CN",
+				"plural-forms": "nplurals=2; plural=(n != 1);"
+			},
+			"Product ID is required.": [ "" ],
+			"Parent product ID is required.": [ "" ],
+			"Item index is required.": [ "" ],
+			"There was an error on getting items.": [ "" ],
+			"Bundle item image": [ "捆绑商品图片" ],
+			"Change": [ "更改" ],
+			"View": [ "查看" ],
+			"OUT OF STOCK": [ "缺货" ],
+			"More pictures": [ "更多图片" ],
+			"Args is required.": [ "" ],
+			"Back": [ "返回" ],
+			"Close": [ "关闭" ],
+			"Prev": [ "上一页" ],
+			"Next": [ "下一页" ],
+			"Add": [ "添加" ],
+			"Add%s": [ "添加%s" ],
+			"Edit product": [ "编辑产品" ],
+			"Save": [ "节省" ],
+			"Please select a product for all items.": [
+				"请选择所有项目的产品."
+			],
+			"Please select a purchasable variation for %s before adding bundle to the cart.": [
+				"请在将组合商品添加到购物车之前，选择一个可购买的 %s 变体。"
+			],
+			"Please select a purchasable product for %s before adding bundle to the cart.": [
+				"请在将捆绑包加入购物车前，为 %s 选择一个可购买的产品。"
+			],
+			"Empty bundle!": [ "空捆绑包！" ],
+			"Show Options": [ "显示选项" ],
+			"Please select a product!": [ "请选择产品！" ],
+			"Search...": [ "搜索..." ],
+			"No products found": [ "未找到产品" ],
+			"Buy all for:": [ "全部购买，价格：" ],
+			"Total:": [ "总计：" ],
+			"% OFF": [ "% 折扣" ]
+		}
+	}
+}

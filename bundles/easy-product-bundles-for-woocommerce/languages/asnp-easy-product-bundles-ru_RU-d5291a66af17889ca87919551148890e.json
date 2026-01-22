@@ -1,0 +1,50 @@
+{
+	"translation-revision-date": "YEAR-MO-DA HO:MI+ZONE",
+	"generator": "WP-CLI/2.5.0",
+	"source": "assets/js/product/index.js",
+	"domain": "messages",
+	"locale_data": {
+		"messages": {
+			"": {
+				"domain": "messages",
+				"lang": "ru_RU",
+				"plural-forms": "nplurals=2; plural=(n != 1);"
+			},
+			"Product ID is required.": [ "" ],
+			"Parent product ID is required.": [ "" ],
+			"Item index is required.": [ "" ],
+			"There was an error on getting items.": [ "" ],
+			"Args is required.": [ "" ],
+			"Prev": [ "Пред" ],
+			"Next": [ "След" ],
+			"OUT OF STOCK": [ "НЕТ В НАЛИЧИИ" ],
+			"Bundle item image": [ "комплекте элемент изображение" ],
+			"Add": [ "Добавить" ],
+			"Add%s": [ "Добавить%s" ],
+			"Change": [ "Изменить" ],
+			"View": [ "Просмотр" ],
+			"Please select a product for all items.": [
+				"Пожалуйста выберите продукт для всех товаров."
+			],
+			"Save": [ "Сэкономь" ],
+			"Edit product": [ "Редактировать продукт" ],
+			"Close": [ "Закрыть" ],
+			"Back": [ "Назад" ],
+			"More pictures": [ "Больше картинок" ],
+			"Please select a purchasable variation for %s before adding bundle to the cart.": [
+				"Пожалуйста, выберите доступную для покупки вариацию %s перед добавлением набора в корзину."
+			],
+			"Please select a purchasable product for %s before adding bundle to the cart.": [
+				"Пожалуйста, выберите покупаемый продукт для %s перед добавлением набора в корзину."
+			],
+			"Empty bundle!": [ "Пустой набор!" ],
+			"Show Options": [ "Показать параметры" ],
+			"Please select a product!": [ "Пожалуйста, выберите продукт!" ],
+			"Search...": [ "Поиск..." ],
+			"No products found": [ "Продукты не найдены" ],
+			"Buy all for:": [ "Купить всё за:" ],
+			"Total:": [ "Итого:" ],
+			"% OFF": [ "% СКИДКА" ]
+		}
+	}
+}

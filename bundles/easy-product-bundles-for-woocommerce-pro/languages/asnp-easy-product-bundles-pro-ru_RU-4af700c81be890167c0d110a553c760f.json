@@ -1,0 +1,30 @@
+{
+	"translation-revision-date": "YEAR-MO-DA HO:MI+ZONE",
+	"generator": "WP-CLI/2.5.0",
+	"source": "assets/js/product/index.js",
+	"domain": "messages",
+	"locale_data": {
+		"messages": {
+			"": {
+				"domain": "messages",
+				"lang": "ru_RU",
+				"plural-forms": "nplurals=2; plural=(n != 1);"
+			},
+			"Bundle item image": [ "комплекте элемент изображение" ],
+			"Optional": [ "необяз" ],
+			"Delete": [ "Удалить" ],
+			"Product information": [ "Информация о продукте" ],
+			"Total items quantity should be at least %d or more.": [
+				"Общее количество товаров должно быть не менее %d или более."
+			],
+			"Total items quantity should not exceed %d.": [
+				"Общее количество товаров не должно превышать %d."
+			],
+			"Add product": [ "Добавить товар" ],
+			"Update product": [ "Обновить товар" ],
+			"Add%s": [ "Добавить%s" ],
+			"Choose %s": [ "Выбрать %s" ],
+			"Please select a product!": [ "Пожалуйста, выберите продукт!" ]
+		}
+	}
+}

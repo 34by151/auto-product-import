@@ -1,0 +1,425 @@
+== Changelog ==
+
+= 6.15.0 =
+* New: Added a new design for the bundle total price section.
+* Ensured compatibility with WooCommerce version 10.4.3
+
+= 6.14.0 =
+* New: Added compatibility with WooCommerce Stripe Payment Gateway By WooCommerce.
+* New: Now opens popup when clicking on unselected optional item.
+* New: When popup is disabled, clicking on optional item selects or unselects item.
+* Fix: Fixed issue where out-of-stock product price was added to total price.
+* Fix: Disabled Add to Cart button for optional item with default out-of-stock product.
+* Fix: Fixed show out of stock message.
+* Ensured compatibility with WooCommerce version 10.4.2
+
+= 6.13.1 =
+* Fix: Fixed a fatal error bug, caused in the recent update.
+
+= 6.13.0 =
+* New: Introduced a None option for discount types.
+* Ensured compatibility with WordPress version 6.9
+* Ensured compatibility with WooCommerce version 10.3.6
+
+= 6.12.3 =
+* Fix: Resolved an issue that occurred when creating bundles with a large number of items.
+* Update: Improved the CSS for alert messages.
+
+= 6.12.1 =
+* Fix: Corrected incorrect sale/regular price display on the frontend when Fixed Price bundles were enabled.
+* Fix: Resolved an issue with getDecimalSeparator formatting
+* Ensured compatibility with WooCommerce version 10.3.5
+
+= 6.12.0 =
+* New : Added a search field to the modal to allow search products.
+* Fix : Fixed product price CSS selector default value issue.
+* Ensured compatibility with WooCommerce version 10.3.4
+
+= 6.11.0 =
+* New: Added compatibility with woo Payments plugin.
+* Fix: Fixed reported issues.
+* Ensured compatibility with WooCommerce version 10.2.2
+
+= 6.10.0 =
+* New: You can now change the label of the product bundle button on the shop page.
+* Fix: Fixed an issue with showing product details when clicking on a product in the pop-up.
+
+= 6.9.0 =
+* New: Added "Apply to the whole bundle" option to the shipping fee calculation types.
+* New: Introduced the ability to calculate bundle prices on the frontend for dynamic bundles.
+* Fix: Now display alert message when all items are optional and not selected.
+* Fix: Fixed variations dropdown menu Css issue in some themes.
+
+= 6.8.0 =
+* New: Added an option in plugin settings to show or hide the “Show Options” button for variable products in the popup.
+* New: Added the ability to change the text color of the “Show Options” button for variable products in the popup via plugin settings.
+* Fix: Resolved an issue with optional products (checkbox mode) when the popup display is disabled in plugin settings.
+* Fix: Fixed the alert message being incorrectly shown for optional product selection.
+* Fix: Corrected the display of variable products as default products in free version of plugin.
+
+= 6.7.0 =
+* New: Added two ways to select variations – from a dropdown menu or by clicking on variation products in the popup.
+* New: Option to show or hide the variable product dropdown menu in the popup through plugin settings.
+* Fix: Resolved issues with optional variable products.
+* Ensured compatibility with WooCommerce version 10.1.2
+
+= 6.6.1 =
+* Fix: Fix select attributes names in the variable and variation products. 
+* Fix: Addressed reported translation issues
+* Fix: CSS styling issues.
+* Ensured compatibility with WooCommerce version 10.1.0
+
+= 6.6.0 =
+* New Feature: Ability to select variations of variable products directly within items using a drop-down menu.
+
+= 6.5.0 =
+* New Feature: Added a new setting to control the display of the "(Bundled in ...)" suffix in order details for bundled items.
+* Ensured compatibility with WooCommerce version 10.0.4
+
+= 6.4.4 =
+* Bug Fix: Fixed the validation of total product quantities within the bundle.
+* Ensured compatibility with WooCommerce version 10.0.3
+
+= 6.4.3 =
+* Bug Fix: Resolved an issue with dynamic bundle pricing in manual admin orders.
+* Bug Fix: Corrected item pricing with quantity in backend manual orders.
+* Bug Fix: Fixed a pricing calculation issue for products with optional items.
+* Bug Fix: Addressed a CSS issue affecting optional checkboxes in certain themes.
+* Ensured compatibility with WooCommerce version 9.9.5
+
+= 6.4.2 =
+* Bug Fix: Resolved Add to cart issue.
+* Ensured compatibility with WooCommerce version 9.9.4
+
+= 6.4.1 =
+* Bug Fix: Resolved catch block error in the popup.
+
+= 6.4.0 =
+* Bug Fix: Resolved "Add to Cart" error caused by the use of separators in product attribute names.
+* Ensured compatibility with WooCommerce version 9.8.5
+
+= 6.3.4 =
+* Bug Fix: Resolved reported CSS issue in products with long name.
+* Ensured compatibility with WooCommerce version 9.8.4
+
+= 6.3.3 =
+* Bug Fix: Resolved CSS issues.
+* Ensured compatibility with WordPress version 6.8
+* Ensured compatibility with WooCommerce version 9.8.2
+
+= 6.3.2 =
+* Bug Fix: Resolved an issue when using “&” in product attribute names.
+* Bug Fix: Fixed class assignment and checkbox input errors.
+
+= 6.3.1 =
+* Bug Fix: Ensure simple bundles are removed from the database when the associated bundle is deleted.
+* Ensured compatibility with WooCommerce version 9.8.1
+
+= 6.3.0 =
+* New Feature: Now you can customize the colours of the total price sections.
+* Bug Fix: Resolved CSS issues.
+
+= 6.2.1 =
+* New Feature: Added support for the Danish (Dansk) language.
+* Bug Fix: Resolved the issue with the default state of the optional items checkbox mode.
+
+= 6.2.0 =
+* New Feature: Added a new mode for optional items, allowing you to choose between a checkbox or a delete button in the plugin settings.
+* Bug Fix: Resolved various CSS issues for improved styling and layout.
+* Ensured compatibility with WooCommerce version 9.7.1
+
+= 6.1.0 =
+* Added compatibility with the WooCommerce Square Payments plugin.
+* Ensured compatibility with WooCommerce version 9.6.2
+
+= 6.0.0 =
+* Added a new feature to automatically update bundle stock based on the stock quantity of child products.
+* Ensured compatibility with WooCommerce version 9.6.1
+
+= 5.10.0 =
+* You can now add a detailed description for your product bundle in the backend in the "Bundle Description" section.
+
+= 5.9.0 =
+* Now, in the settings, you can disable the popup for items that have only one product.
+
+= 5.8.0 =
+* Fixed price formatting issues.
+* Added Indian (Hindi) language support.
+* Ensured compatibility with WooCommerce version 9.5.1
+
+= 5.7.0 =
+* Added thousand separator for price formatting.
+
+= 5.6.0 =
+* Enhanced compatibility with the "Discount Rules and Dynamic Pricing for WooCommerce" By Discount Team plugin.
+
+= 5.5.0 =
+* Enhanced compatibility with the "FOX - WooCommerce Currency Switcher" plugin.
+* Resolved CSS issues in the variation product filter section within the pop-up.
+* Fixed product attributes name issue.
+* Ensured compatibility with WooCommerce version 9.4.2
+
+= 5.4.0 =
+* Resolved the bundle price issue in the order form.
+* Added options to customize the text and background color of alert messages.
+* Introduced buttons for Articles, Video Tutorials, and Get Support in the plugin settings.
+* Ensured compatibility with WordPress version 6.7
+* Ensured compatibility with WooCommerce version 9.4.1
+
+= 5.3.0 =
+* Enhanced compatibility with the "Side Cart Woocommerce By XootiX" plugin.
+* Added support for the Dutch language (Nederlands).
+* Introduced a section for our other free plugins in the settings menu.
+
+= 5.2.0 =
+* Added compatibility with the CURCY Multi Currency for WooCommerce plugin.
+* Updated the positioning of the settings save button to be sticky.
+
+= 5.1.0 =
+* Added a customizable selector for the "Add to Cart" button in plugin settings.
+* Fixed issues in is items in stock method.
+* Fixed bundle price in admin manual orders.
+* Disabled the "Add to Cart" button when all items are optional and the bundle has a minimum quantity requirement.
+* Ensured full compatibility with WooCommerce version 9.3.2.
+
+= 5.0.0 =
+* You can now customize the hover color for the increase and decrease buttons in the quantity field.
+* Added support for Japanese language.(日本語)
+* Disable bundle items quantity changes in Woodmart theme.
+* fixed memory issues.
+* Ensured compatibility with WooCommerce version 9.2.3
+
+= 4.10.0 =
+* Introduced a new feature to hide product prices.
+* You can now change the hover color of empty item text.  
+* Added support for Simplified Chinese (简体中文).
+* Introduced a new bundle state to the post states on the admin products page.
+* Resolved an issue with product bundle pricing in the admin manual orders.
+* Fixed the issue where the 'Please select a product' message was not displayed when the product bundle has a fixed price.
+* Fixed responsive issues of pop-up across all device sizes.
+* Ensured compatibility with WordPress version 6.6
+* Ensured compatibility with WooCommerce version 9.1.2
+
+= 4.9.1 =
+* fixed empty item image alt attribute issue.
+* Ensured compatibility with WooCommerce version 9.0.0
+
+= 4.9.0 =
+* Changed the position of the Add product button on the quick view screen.
+* Now you can assign a photo to the empty item, which is accessible in the display section of the plugin backend.
+* Compatibility with new cart and checkout block changes.
+* Fix variation product title in Hebrew language.
+* Ensured compatibility with WooCommerce version 8.9.3
+
+= 4.8.0 =
+* Added asnpWepbPriceChanged custom JavaScript event for bundle price changes.
+* Fixed the pro version JavaScript dependency issue.
+* Change Saved x$ to Save x$.
+* Update languages according to the change Saved x$ to Save x$.
+* Minor typo fix in the plugin short name.
+
+= 4.7.0 =
+* Added a new feature, the ability to specify the min/max total quantity of bundled items for customer purchases.
+* Update languages.
+* Ensured compatibility with WooCommerce version 8.8.3
+
+= 4.6.0 =
+* Added a new feature to duplicate the item in the backend. (available in the pro version)
+* Resolved issues pertaining to German language translations.
+* Ensured compatibility with WooCommerce version 8.8.2
+
+= 4.5.1 =
+* Minor fix
+
+= 4.5.0 =
+* Fixed the bundle price issue when items have different tax rates.
+* Fixed the bundle price issue inside the cart when bundle have default products.
+* Fixed the bundle tax issues in the cart block.
+
+= 4.4.0 =
+* Fixed add to cart button issue on block themes
+* Fixed Css issues.
+* Ensured compatibility with WooCommerce version 8.7.0
+
+= 4.3.0 =
+* Add setting for when clicking on a product in the popup page, product selection or showing product detail(quick view page)
+
+= 4.2.0 =
+* Added a plus icon between items for enhanced visibility.
+* Added the option to customize the color of the plus icon.
+* Added the option to customize the color of the quick view button.
+* Added Bulgarian (Български) language support.
+* Streamlined the user interface by removing the "use default product" checkbox field.
+* Fixed reported issues by customers.
+* Ensured compatibility with WooCommerce version 8.6.1
+
+= 4.1.0 =
+* Added Compatibility with Google merchants.
+* Fix position default value.
+* Ensured compatibility with WooCommerce version 8.5.2
+
+= 4.0.0 =
+* Added compatibility with WooCommerce the Cart and Checkout blocks.
+* Fixed an issue in order again functionality.
+* New mode of displaying bundle in the Cart and Checkout.
+* New mode of appearing variation products in pop-up.
+* Ensured compatibility with WooCommerce version 8.5.1
+
+= 3.9.0 =
+* Added product quantity field within the item.
+* Added configurable option in settings to show or not product quantity field within the item.
+* Enhanced settings to provide flexibility in choosing how to display product prices within items – either by individual product prices or by product subtotal.
+* Added a feature that ensures variations are not displayed in the list if their parent is already present.
+* Resolved CSS-related report problems in specific themes for improved visual consistency.
+* The issue with the "&" character in the product's name has been resolved.
+* Ensured compatibility with WooCommerce version 8.3.1
+
+= 3.8.0 =
+* Fixed an issue in attribute names.
+* Fixed an issue in excluding variations when using an exclude products option.
+* Ensured compatibility with WordPress version 6.4
+* Ensured compatibility with WooCommerce version 8.3.0
+
+= 3.7.0 =
+* Added Product Sorting Options now you can sort products by ID, Title, Menu order, Date, Price, Popularity, and Rating.
+* Added an option to change the product list title directly from the backend display section.
+* Added an option to change the Pop-Up header title from the backend display section.
+* Added an option to show the product subtotal instead of product price in the products list.
+* Fixed CSS display issues and product descriptions and reported issues.
+* Ensured compatibility with WooCommerce version 8.2.1.
+
+= 3.6.0 =
+* Added a product quick view feature.
+* Enhanced plugin settings to allow customization of quickView icon, images icon, and optional title colors.
+* Added Turkish language support.
+* Updated other languages.
+* Resolved CSS problems for various themes.
+* Fixed the issue where the selected product description wouldn't display on mobile hover.
+* Ensured compatibility with WooCommerce version 8.1.1.
+
+= 3.5.0 =
+* Added an option to include parent price in the bundle total price or no.
+* Fix issues in the total price display.
+* Update plugin PHP filters for developers.
+
+= 3.4.0 =
+* Added an option under diplay tab of each item to customize the title for empty items, previously set as "Select your product".
+* Improved auto calculate price for product bundles by using the regular or sale price of the bundle as the base price. The calculation now includes the selected items' prices: bundle base price + selected items' price.
+* Fixed an issue with select variations that arose in version 3.3.0.
+* Compatibility with WooCommerce 8.0.3
+
+= 3.3.0 =
+* Add hide out of stock products option to the plugin settings.
+* Add Hebrew language and update other languages.
+* Fix settings page styling issues.
+* Fix product name and price font size.
+* Don't set out of stock when items are optional.
+* Fix help button position issue.
+* Fix a style issue in products select popup.
+* Compatibility with WooCommerce 8.0.2
+
+= 3.2.0 =
+* Add WooCommerce HPOS (High Performance Order Storage) support.
+* Add ajax add to cart support on products archive page.
+* Add RTL languages support.
+* Add Out of Stock badge on the selected products in the bundle.
+* Add do not show out of stock for items when there are more products available to select for the item.
+* Add need help button.
+* Add an option to change badge colors.
+* Add Russion language support.
+* Add Polish language support.
+* Add Arabic language support.
+* Add Persian language support.
+* Fix do not select default product from the products field for optional items.
+* Fix product price color and size issue with some themes.
+* Fix delete icon styles.
+* Compatibility with WooCommerce 8.0.0
+* Compatibility with WordPress 6.3
+
+= 3.1.0 =
+* Add an option to enable/disable prepending parent name to bundle items in the cart and order.
+* Fix register polyfills for review script.
+* Add Italian language support.
+* Add German language support.
+* Add French language support.
+* Add Portuguese language support.
+* Compatibility with WooCommerce 7.8.2
+
+= 3.0.0 =
+* Add options to edit colors of product bundle sections.
+* Add an option to control object-fit of the products image.
+* Add an option to show/hide products list under bundle items.
+* Add an option to show/hide total price.
+* Add an option to show/hide saved price.
+* Fix popup issue with some of themes like Divi theme.
+* Fix font-size issue with some of themes.
+* Fix tooltip issues.
+* Fix popup star rating styles.
+* Fix some of style issues.
+* Compatibility with WooCommerce 7.8.0
+
+= 2.3.0 =
+* Add new loader to the popup products loading.
+* Compatibility with WooCommerce 7.7.2
+
+= 2.2.0 =
+* Add an option to control show price for the bundle items.
+* Fix an issue in checking stock availability of the product.
+* Fix quantity input field issue.
+* Compatibility with WooCommerce 7.7.0
+
+= 2.1.0 =
+* Allow add to cart bundle products which have default items in archive pages.
+* Fix getting products price with a tax in the popup.
+
+= 2.0.0 =
+* Add advanced algorithm to select products.
+* Add asnp_wepb_before_order_item_meta filter hook.
+* Compatibility with WooCommerce 7.6.1
+
+= 1.7.1 =
+* Add number of decimals control.
+* Add $cart_item to the asnp_wepb_cart_item_name filter.
+
+= 1.7.0 =
+* Add an option to control product bundle position in the product page.
+* Fix translation text domain issue.
+* Compatibility with WordPress 6.2
+* Compatibility with WooCommerce 7.5.1
+
+= 1.6.0 =
+* Consider product bundle items quantities when calculating total price of the product.
+* Fix an issue in checking css selector positions.
+* Fix some issues in css styles.
+* Fix issues in the plugin language translations.
+* Compatibility check with WooCommerce 7.4.1
+
+= 1.5.0 =
+* Fix product select modal scrollbar issue when change pages.
+* Change pagination next/prev button icons.
+* Fix translation issue in some of texts.
+* Compatibility with WooCommerce 7.4.0
+
+= 1.4.0 =
+* Add auto calculate price types option in the settings.
+* Calculate product bundle price based on sum of default products price.
+* Add product bundle is in stock based on it's default items.
+
+= 1.3.0 =
+* Fix variation products title issue.
+* Fix general and display tabs box shadow issue in admin.
+* Fix an issue in registering polyfills.
+* Fix list 1 template images size.
+* Compatibility with WooCommerce 7.3.0
+
+= 1.2.0 =
+* Fix images size issue.
+* compatibility with WooCommerce 7.1.1
+
+= 1.1.0 =
+* New: Added [asnp_wepb_product] WooCommerce Product Bundles shortcode.
+* Fix: Fix quantity increase/decrease icons.
+* Fix: Fix icons issue.
+
+= 1.0.0 =
+* First release.

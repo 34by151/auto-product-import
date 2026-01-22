@@ -1,0 +1,30 @@
+{
+	"translation-revision-date": "YEAR-MO-DA HO:MI+ZONE",
+	"generator": "WP-CLI/2.11.0",
+	"source": "assets/js/product/index.js",
+	"domain": "messages",
+	"locale_data": {
+		"messages": {
+			"": {
+				"domain": "messages",
+				"lang": "nl_NL",
+				"plural-forms": "nplurals=2; plural=(n != 1);"
+			},
+			"Optional": [ "Optioneel" ],
+			"Delete": [ "Verwijderen" ],
+			"Bundle item image": [ "Afbeelding van bundelartikel" ],
+			"Total items quantity should be at least %d or more.": [
+				"De totale hoeveelheid artikelen moet ten minste %d of meer zijn."
+			],
+			"Total items quantity should not exceed %d.": [
+				"De totale hoeveelheid artikelen mag niet meer dan %d bedragen."
+			],
+			"Product information": [ "Productinformatie" ],
+			"Add product": [ "Product toevoegen" ],
+			"Update product": [ "Product bijwerken" ],
+			"Add%s": [ "Voeg%s toe" ],
+			"Choose %s": [ "Kies %s" ],
+			"Please select a product!": [ "Kies alstublieft een product!" ]
+		}
+	}
+}
