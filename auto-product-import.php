@@ -1,93 +1,214 @@
 <?php
 /**
  * Plugin Name: Auto Product Import
- * Plugin URI: https://github.com/kadafs
- * Description: Automatically add WooCommerce products from URLs
- * Version: 2.0.0
- * Author: Kadafs, ArtInMetal
- * Author URI: https://github.com/kadafs
+ * Description: Automatically import products from external sources
+ * Version: 2.2.2
+ * Author: Your Name
  * Text Domain: auto-product-import
- * Domain Path: /languages
- * WC requires at least: 6.0.0
- * WC tested up to: 9.0.0
- * Requires at least: 5.0
- * Requires PHP: 7.2
  */
 
-// If this file is called directly, abort.
-if (!defined('WPINC')) {
-    die;
+if (!defined('ABSPATH')) {
+    exit;
 }
 
 // Define plugin constants
-define('AUTO_PRODUCT_IMPORT_VERSION', '2.0.0');
-define('AUTO_PRODUCT_IMPORT_PLUGIN_DIR', plugin_dir_path(__FILE__));
-define('AUTO_PRODUCT_IMPORT_PLUGIN_URL', plugin_dir_url(__FILE__));
+define('APM_VERSION', '2.2.2');
+define('APM_PLUGIN_DIR', plugin_dir_path(__FILE__));
+define('APM_PLUGIN_URL', plugin_dir_url(__FILE__));
+
+// Include helper functions
+require_once APM_PLUGIN_DIR . 'includes/helpers/functions-dom.php';
+require_once APM_PLUGIN_DIR . 'includes/helpers/functions-url.php';
+require_once APM_PLUGIN_DIR . 'includes/helpers/functions-validation.php';
+
+// Include admin classes
+require_once APM_PLUGIN_DIR . 'includes/admin/class-admin-menu.php';
+require_once APM_PLUGIN_DIR . 'includes/admin/class-settings-handler.php';
+require_once APM_PLUGIN_DIR . 'includes/admin/class-template-data.php';
+
+// Include AJAX handlers
+require_once APM_PLUGIN_DIR . 'includes/ajax/class-ajax-handler.php';
+require_once APM_PLUGIN_DIR . 'includes/ajax/class-import-queue-ajax-handler.php';
+
+// Include import classes - Core
+require_once APM_PLUGIN_DIR . 'includes/import/class-html-parser.php';
+require_once APM_PLUGIN_DIR . 'includes/import/class-product-scraper.php';
+require_once APM_PLUGIN_DIR . 'includes/import/class-product-scraper-extractors.php';
+require_once APM_PLUGIN_DIR . 'includes/import/class-product-scraper-sku.php';
+
+// Include import classes - Extractors
+require_once APM_PLUGIN_DIR . 'includes/import/class-bigcommerce-extractor.php';
+require_once APM_PLUGIN_DIR . 'includes/import/class-shopify-extractor.php';
+require_once APM_PLUGIN_DIR . 'includes/import/class-description-extractor.php';
+require_once APM_PLUGIN_DIR . 'includes/import/class-description-extractor-additional-info.php';
+require_once APM_PLUGIN_DIR . 'includes/import/class-specifications-extractor.php';
+require_once APM_PLUGIN_DIR . 'includes/import/class-specifications-extractor-shopify.php';
+require_once APM_PLUGIN_DIR . 'includes/import/class-specifications-extractor-magento.php';
+require_once APM_PLUGIN_DIR . 'includes/import/class-image-extractor.php';
+require_once APM_PLUGIN_DIR . 'includes/import/class-pdf-extractor.php';
+require_once APM_PLUGIN_DIR . 'includes/import/class-pdf-extractor-html-parser.php';
+require_once APM_PLUGIN_DIR . 'includes/import/class-pdf-extractor-js-parser.php';
+require_once APM_PLUGIN_DIR . 'includes/import/class-pdf-extractor-validator.php';
+
+// Include import classes - Uploaders
+require_once APM_PLUGIN_DIR . 'includes/import/class-image-uploader.php';
+require_once APM_PLUGIN_DIR . 'includes/import/class-pdf-uploader.php';
+
+// Include import classes - Product Creation
+require_once APM_PLUGIN_DIR . 'includes/import/class-product-creator.php';
+require_once APM_PLUGIN_DIR . 'includes/import/class-product-creator-sync-fields.php';
+require_once APM_PLUGIN_DIR . 'includes/import/class-specifications-tab-creator.php';
+// Documents tab creator removed in v2.2.2 - file deleted
+
+// Include import queue classes
+require_once APM_PLUGIN_DIR . 'includes/import-queue/class-import-queue-database.php';
+require_once APM_PLUGIN_DIR . 'includes/import-queue/class-import-queue-batch-processor.php';
+require_once APM_PLUGIN_DIR . 'includes/import-queue/class-import-queue-table-renderer.php';
+require_once APM_PLUGIN_DIR . 'includes/import-queue/class-import-queue-manager.php';
 
 /**
- * Declare HPOS (High-Performance Order Storage) compatibility
- * 
- * Although this plugin manages product imports (not orders), WooCommerce requires
- * all active plugins to explicitly declare HPOS compatibility to prevent warnings.
- * 
- * This plugin is fully compatible with HPOS because:
- * - It only works with WooCommerce products (custom post types)
- * - Products remain as posts even with HPOS enabled
- * - HPOS specifically handles order storage, not product storage
- * - All WooCommerce API calls are compatible with HPOS-enabled stores
+ * Initialize the plugin
  */
-add_action('before_woocommerce_init', function() {
-    if (class_exists('\Automattic\WooCommerce\Utilities\FeaturesUtil')) {
-        \Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility(
-            'custom_order_tables',
-            __FILE__,
-            true
-        );
+function apm_init() {
+    // Initialize settings handler (must run on admin_init)
+    $settings_handler = new APM_Settings_Handler();
+    $settings_handler->init();
+    
+    // Initialize admin interface
+    if (is_admin()) {
+        $admin_menu = new APM_Admin_Menu();
+        $admin_menu->init(); // CALL THE INIT METHOD
+        
+        new APM_Ajax_Handler();
+        new APM_Import_Queue_Ajax_Handler();
+        
+        // Initialize import queue manager
+        $queue_manager = new APM_Import_Queue_Manager();
+        $queue_manager->init();
     }
-});
-
-// Check if WooCommerce is active
-function auto_product_import_check_woocommerce() {
-    if (!in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_option('active_plugins')))) {
-        add_action('admin_notices', 'auto_product_import_woocommerce_missing_notice');
-        return false;
-    }
-    return true;
+    
+    // NOTE: Documents Tab Creator initialization removed in v2.2.2
+    // PDFs still uploaded to media library but no Documents tab created
 }
+add_action('plugins_loaded', 'apm_init');
 
-// Display notice if WooCommerce is not active
-function auto_product_import_woocommerce_missing_notice() {
-    ?>
-    <div class="error">
-        <p><?php _e('Auto Product Import requires WooCommerce to be installed and active.', 'auto-product-import'); ?></p>
-    </div>
-    <?php
+/**
+ * Activation hook
+ */
+function apm_activate() {
+    // Create import queue database table
+    $queue_db = new APM_Import_Queue_Database();
+    $queue_db->create_table();
+    
+    // Set default options
+    add_option('apm_add_pdfs_to_documents', 'on');
+    
+    // Flush rewrite rules
+    flush_rewrite_rules();
 }
+register_activation_hook(__FILE__, 'apm_activate');
 
-// Plugin activation hook
-register_activation_hook(__FILE__, 'auto_product_import_activate');
-function auto_product_import_activate() {
-    // Activation code here
-    if (!auto_product_import_check_woocommerce()) {
-        deactivate_plugins(plugin_basename(__FILE__));
-        wp_die(__('Auto Product Import requires WooCommerce to be installed and active.', 'auto-product-import'));
-    }
+/**
+ * Deactivation hook
+ */
+function apm_deactivate() {
+    // Flush rewrite rules
+    flush_rewrite_rules();
 }
+register_deactivation_hook(__FILE__, 'apm_deactivate');
 
-// Plugin initialization
-add_action('plugins_loaded', 'auto_product_import_init');
-function auto_product_import_init() {
-    if (!auto_product_import_check_woocommerce()) {
+/**
+ * Enqueue plugin scripts and styles
+ */
+function apm_enqueue_scripts($hook) {
+    // Only load on our plugin pages
+    if (strpos($hook, 'apm-') === false && $hook !== 'toplevel_page_apm-auto-product-import') {
         return;
     }
     
-    // Load plugin text domain
-    load_plugin_textdomain('auto-product-import', false, dirname(plugin_basename(__FILE__)) . '/languages');
+    // Enqueue admin JS
+    wp_enqueue_script(
+        'apm-admin-script',
+        APM_PLUGIN_URL . 'assets/admin.js',
+        array('jquery'),
+        APM_VERSION,
+        true
+    );
     
-    // Include required files
-    require_once AUTO_PRODUCT_IMPORT_PLUGIN_DIR . 'includes/class-auto-product-import.php';
+    // Enqueue import queue JS
+    wp_enqueue_script(
+        'apm-import-queue',
+        APM_PLUGIN_URL . 'assets/import-queue.js',
+        array('jquery'),
+        APM_VERSION,
+        true
+    );
     
-    // Initialize the main plugin class
-    $auto_product_import = new Auto_Product_Import();
-    $auto_product_import->init();
+    // Localize script with AJAX URL and nonce
+    wp_localize_script('apm-admin-script', 'apmAjax', array(
+        'ajaxurl' => admin_url('admin-ajax.php'),
+        'nonce' => wp_create_nonce('apm_ajax_nonce')
+    ));
+    
+    wp_localize_script('apm-import-queue', 'apmQueueAjax', array(
+        'ajaxurl' => admin_url('admin-ajax.php'),
+        'nonce' => wp_create_nonce('apm_queue_nonce')
+    ));
+}
+add_action('admin_enqueue_scripts', 'apm_enqueue_scripts');
+
+/**
+ * Add dashicons support on frontend for Documents tab
+ */
+function apm_enqueue_dashicons() {
+    wp_enqueue_style('dashicons');
+}
+add_action('wp_enqueue_scripts', 'apm_enqueue_dashicons');
+
+/**
+ * Add custom CSS for Documents tab
+ */
+function apm_documents_tab_css() {
+    if (!is_product()) {
+        return;
+    }
+    ?>
+    <style>
+        .woocommerce-product-documents p {
+            margin: 10px 0;
+        }
+        .woocommerce-product-documents a {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            color: #2271b1;
+            font-size: 14px;
+            transition: color 0.2s;
+        }
+        .woocommerce-product-documents a:hover {
+            color: #135e96;
+            text-decoration: underline;
+        }
+        .woocommerce-product-documents .dashicons {
+            font-size: 18px;
+            width: 18px;
+            height: 18px;
+        }
+    </style>
+    <?php
+}
+add_action('wp_head', 'apm_documents_tab_css');
+
+/**
+ * Log function for debugging
+ */
+function apm_log($message) {
+    if (defined('WP_DEBUG') && WP_DEBUG === true) {
+        if (is_array($message) || is_object($message)) {
+            error_log('APM: ' . print_r($message, true));
+        } else {
+            error_log('APM: ' . $message);
+        }
+    }
 }
