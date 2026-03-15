@@ -50,6 +50,12 @@ jQuery(document).ready(function($) {
                     
                     // Clear the URL field
                     $('#apm-product-url').val('');
+
+                    // Reload the page after a short delay so the queue
+                    // counts and lists reflect the completed import
+                    setTimeout(function() {
+                        location.reload();
+                    }, 2000);
                 } else {
                     // Show error message
                     $message.removeClass('notice-success').addClass('notice-error');
