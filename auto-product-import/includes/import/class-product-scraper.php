@@ -18,6 +18,7 @@ class APM_Product_Scraper {
     private $description_extractor;
     private $extractors;
     private $specifications_extractor;
+    private $eastwesteng_extractor;
     
     public function __construct() {
         $this->html_parser = new APM_HTML_Parser();
@@ -26,6 +27,7 @@ class APM_Product_Scraper {
         $this->description_extractor = new APM_Description_Extractor();
         $this->extractors = new APM_Product_Scraper_Extractors();
         $this->specifications_extractor = new APM_Specifications_Extractor();
+        $this->eastwesteng_extractor = new APM_EastWestEng_Extractor();
     }
     
     /**
@@ -131,7 +133,16 @@ class APM_Product_Scraper {
         if ($debug) {
             error_log("APM: Final product data - Images found: " . count($images) . ", PDFs found: " . count($pdfs) . ", Specifications found: " . ($specifications['found'] ? 'Yes' : 'No'));
         }
-        
+
+        // East West Engineering: extract per-row product data (SKU, title, price)
+        $eastwesteng_rows = array();
+        if (APM_EastWestEng_Extractor::is_eastwesteng_url($url)) {
+            $eastwesteng_rows = $this->eastwesteng_extractor->extract_rows($xpath, $debug);
+            if ($debug) {
+                error_log('APM EastWestEng: ' . count($eastwesteng_rows) . ' product row(s) found');
+            }
+        }
+
         return array(
             'title' => $title,
             'price' => $price,
@@ -143,7 +154,8 @@ class APM_Product_Scraper {
             'short_description' => isset($description_data['short_description']) ? $description_data['short_description'] : '',
             'additional_info' => isset($description_data['additional_info']) ? $description_data['additional_info'] : array(),
             'source_url' => $url,
-            'html_content' => $html_content  // ADD RAW HTML FOR GST DETECTION
+            'html_content' => $html_content,  // ADD RAW HTML FOR GST DETECTION
+            'eastwesteng_rows' => $eastwesteng_rows,
         );
     }
     

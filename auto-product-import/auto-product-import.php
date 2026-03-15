@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Auto Product Import
  * Description: Automatically import products from external sources
- * Version: 2.2.3
+ * Version: 2.2.4
  * Author: Your Name
  * Text Domain: auto-product-import
  */
@@ -12,7 +12,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('APM_VERSION', '2.2.3');
+define('APM_VERSION', '2.2.4');
 define('APM_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('APM_PLUGIN_URL', plugin_dir_url(__FILE__));
 
@@ -37,6 +37,7 @@ require_once APM_PLUGIN_DIR . 'includes/import/class-product-scraper-extractors.
 require_once APM_PLUGIN_DIR . 'includes/import/class-product-scraper-sku.php';
 
 // Include import classes - Extractors
+require_once APM_PLUGIN_DIR . 'includes/import/class-eastwesteng-extractor.php';
 require_once APM_PLUGIN_DIR . 'includes/import/class-bigcommerce-extractor.php';
 require_once APM_PLUGIN_DIR . 'includes/import/class-shopify-extractor.php';
 require_once APM_PLUGIN_DIR . 'includes/import/class-description-extractor.php';
