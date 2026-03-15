@@ -79,8 +79,8 @@ function apm_init() {
         $admin_menu = new APM_Admin_Menu();
         $admin_menu->init(); // CALL THE INIT METHOD
         
-        new APM_Ajax_Handler();
-        new APM_Import_Queue_Ajax_Handler();
+        $ajax_handler = new APM_Ajax_Handler();
+        $ajax_handler->init();
         
         // Initialize import queue manager
         $queue_manager = new APM_Import_Queue_Manager();
