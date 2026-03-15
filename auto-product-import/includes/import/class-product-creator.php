@@ -50,9 +50,28 @@ class APM_Product_Creator {
         
         // Get source URL for GST detection (needed before setting price)
         $source_url = isset($product_data['source_url']) ? $product_data['source_url'] : '';
-        
-        // Detect if we should add GST and set price
-        $gst_info = $this->sync_fields->detect_and_apply_gst($product_data, $product, $debug);
+
+        // For eastwesteng URLs the extractor has already applied GST (×1.1).
+        // Skip generic GST detection to avoid double-GST, and apply 15% margin instead.
+        $is_eastwesteng = APM_EastWestEng_Extractor::is_eastwesteng_url($source_url);
+
+        if ($is_eastwesteng) {
+            // Price from extractor is GST-inclusive; apply 15% margin for the creation price.
+            if (!empty($product_data['price'])) {
+                $price_with_margin = round(floatval($product_data['price']) * 1.15, 2);
+                $product->set_regular_price($price_with_margin);
+
+                if ($debug) {
+                    error_log("APM: eastwesteng — GST-inclusive price: " . $product_data['price'] . ", after 15% margin: $price_with_margin");
+                }
+
+                error_log("APM: eastwesteng price set with 15% margin: $" . $product_data['price'] . " → $$price_with_margin");
+            }
+            $gst_info = array('add_gst' => 'yes');
+        } else {
+            // Detect if we should add GST and set price
+            $gst_info = $this->sync_fields->detect_and_apply_gst($product_data, $product, $debug);
+        }
         
         // Set SKU - Use extracted SKU or generate one
         $this->set_product_sku($product, $product_data, $debug);
@@ -80,7 +99,12 @@ class APM_Product_Creator {
         
         // Set Auto Product Sync fields
         $this->sync_fields->set_sync_fields($product_id, $product_data, $gst_info['add_gst'], $debug);
-        
+
+        // Apply eastwesteng hard-coded defaults (Add GST, Add Margin, Margin %)
+        if ($is_eastwesteng) {
+            $this->sync_fields->apply_eastwesteng_defaults($product_id, $debug);
+        }
+
         // Upload and attach images
         $this->attach_images($product, $product_id, $product_data, $debug);
         
