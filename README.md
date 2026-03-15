@@ -1,6 +1,6 @@
 # Auto Product Import
 
-Version: 2.1.4
+Version: 2.2.3
 
 ## Description
 
@@ -107,8 +107,8 @@ The plugin includes intelligent SKU extraction with site-specific logic:
    - Example: TGWPCUT42PFCLCDBUNDLE
 
 2. **eastwesteng.com.au**
-   - Extracts from "Model" column in price table
-   - Example: QSS25CB
+   - Extracts from standard WooCommerce SKU elements (`[itemprop="sku"]`, `.sku`)
+   - Example: QGA25
 
 3. **Generic Sites**
    - Attempts common SKU patterns
@@ -266,6 +266,11 @@ auto-product-import/
 - Check if GST was correctly applied to the price
 
 ## Changelog
+
+### Version 2.2.3 (2026-03-15)
+- Fixed: Import failure showing generic "An error occurred" with no debug log entries — AJAX handler now catches PHP exceptions and returns the actual error message to the UI
+- Fixed: HTTP errors (4xx/5xx) from remote sites now logged and handled gracefully instead of causing a silent crash
+- Fixed: eastwesteng.com.au SKU extraction updated from legacy Magento price-table method to standard WooCommerce selectors (`[itemprop="sku"]`, `.sku`)
 
 ### Version 2.1.4 (2025-10-04)
 - Added intelligent SKU extraction with site-specific logic

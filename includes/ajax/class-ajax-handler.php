@@ -37,22 +37,55 @@ class APM_Ajax_Handler {
             return;
         }
         
+        // Prevent concurrent imports of the same URL (e.g. single form + batch processor running together)
+        $lock_key = 'apm_import_lock_' . md5($url);
+        if (get_transient($lock_key)) {
+            wp_send_json_error(array('message' => __('This URL is already being imported. Please wait and try again.', 'auto-product-import')));
+            return;
+        }
+        set_transient($lock_key, 1, 300); // Lock for up to 5 minutes
+
         $scraper = new APM_Product_Scraper();
-        $product_data = $scraper->fetch($url);
-        
+
+        try {
+            $product_data = $scraper->fetch($url);
+        } catch (Exception $e) {
+            delete_transient($lock_key);
+            error_log('APM: Import failed with exception: ' . $e->getMessage());
+            wp_send_json_error(array('message' => $e->getMessage()));
+            return;
+        }
+
         if (is_wp_error($product_data)) {
+            delete_transient($lock_key);
             wp_send_json_error(array('message' => $product_data->get_error_message()));
             return;
         }
-        
+
         $creator = new APM_Product_Creator();
-        $product_id = $creator->create($product_data);
-        
+
+        try {
+            $product_id = $creator->create($product_data);
+        } catch (Exception $e) {
+            delete_transient($lock_key);
+            error_log('APM: Product creation failed with exception: ' . $e->getMessage());
+            wp_send_json_error(array('message' => $e->getMessage()));
+            return;
+        }
+
         if (is_wp_error($product_id)) {
+            delete_transient($lock_key);
             wp_send_json_error(array('message' => $product_id->get_error_message()));
             return;
         }
-        
+
+        delete_transient($lock_key);
+
+        // Keep the import queue in sync: if this URL exists as a pending queue
+        // item, mark it as imported so the batch processor won't re-import it.
+        $queue_db = new APM_Import_Queue_Database();
+        $queue_db->mark_as_imported_by_url($url, $product_id);
+
         wp_send_json_success(array(
             'message' => __('Product imported successfully!', 'auto-product-import'),
             'product_id' => $product_id,

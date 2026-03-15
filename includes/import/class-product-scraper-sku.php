@@ -149,76 +149,41 @@ class APM_Product_Scraper_SKU {
     }
     
     /**
-     * Extract SKU from eastwesteng.com.au
+     * Extract SKU from eastwesteng.com.au (WooCommerce)
      */
     private function extract_eastwesteng($xpath, $detailed_log) {
         if ($detailed_log) {
-            error_log("APM: Using eastwesteng.com.au extraction method");
-            error_log("APM: Looking for SKU in price table 'Model' column");
+            error_log("APM: Using eastwesteng.com.au WooCommerce extraction method");
+            error_log("APM: Looking for SKU in standard WooCommerce elements");
         }
-        
-        // Try to find the table with "Model" header
-        // First, find all table headers
-        $headers = $xpath->query('//th');
-        
-        if ($detailed_log) {
-            error_log("APM: Found " . $headers->length . " table headers");
-        }
-        
-        $model_column_index = -1;
-        
-        // Find which column has "Model"
-        foreach ($headers as $index => $header) {
-            $header_text = trim($header->textContent);
-            
-            if ($detailed_log && $index < 10) {
-                error_log("APM: Header #$index: '$header_text'");
-            }
-            
-            if (stripos($header_text, 'model') !== false) {
-                $model_column_index = $index;
-                
-                if ($detailed_log) {
-                    error_log("APM: ✓ Found 'Model' column at index: $model_column_index");
-                }
-                break;
-            }
-        }
-        
-        if ($model_column_index >= 0) {
-            // Find the corresponding data cell in the same column
-            // Assuming it's in the first data row of the table
-            $table_rows = $xpath->query('//tr');
-            
-            foreach ($table_rows as $row) {
-                $cells = $xpath->query('.//td', $row);
-                
-                if ($cells->length > $model_column_index) {
-                    $potential_sku = trim($cells->item($model_column_index)->textContent);
-                    
-                    // Only accept if it looks like a SKU (alphanumeric, not empty)
-                    if (!empty($potential_sku) && preg_match('/^[A-Z0-9\-]+$/i', $potential_sku)) {
-                        if ($detailed_log) {
-                            error_log("APM: ✓ Found SKU in Model column: $potential_sku");
-                        }
-                        return $potential_sku;
-                    } else {
-                        if ($detailed_log && !empty($potential_sku)) {
-                            error_log("APM: Skipped invalid SKU format: $potential_sku");
-                        }
+
+        // Standard WooCommerce SKU selectors
+        $selectors = array(
+            '//*[@itemprop="sku"]',
+            '//span[contains(@class, "sku")]',
+            '//p[contains(@class, "sku")]',
+            '//div[contains(@class, "sku")]',
+        );
+
+        foreach ($selectors as $selector) {
+            $nodes = $xpath->query($selector);
+            if ($nodes && $nodes->length > 0) {
+                $potential_sku = trim($nodes->item(0)->textContent);
+                // Remove "SKU:" prefix if present
+                $potential_sku = preg_replace('/^SKU:\s*/i', '', $potential_sku);
+                if (!empty($potential_sku)) {
+                    if ($detailed_log) {
+                        error_log("APM: ✓ Found SKU via selector '$selector': $potential_sku");
                     }
+                    return $potential_sku;
                 }
             }
-            
-            if ($detailed_log) {
-                error_log("APM: ✗ Found Model column but no valid SKU in data cells");
-            }
-        } else {
-            if ($detailed_log) {
-                error_log("APM: ✗ Could not find 'Model' column in table headers");
-            }
         }
-        
+
+        if ($detailed_log) {
+            error_log("APM: ✗ No SKU found via WooCommerce selectors");
+        }
+
         return '';
     }
     
