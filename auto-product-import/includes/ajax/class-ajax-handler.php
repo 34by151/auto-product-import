@@ -335,11 +335,45 @@ class APM_Ajax_Handler {
             );
         }
 
-        // Mark URL as done in the import queue using the FIRST created product so
-        // the queue entry references a meaningful, consistently named product.
+        // Write one import queue row per successfully imported product so that the
+        // Imported table on the import page shows every product with its actual title.
+        //
+        // Strategy:
+        //   • First imported product  → update/insert using the canonical URL so any
+        //     existing queue entry (synced from apb_products) is updated in place.
+        //   • Additional products     → insert using url?apm_sku={sku} as a unique URL
+        //     so each gets its own row without violating the unique_url constraint.
+        //
+        // INSERT … ON DUPLICATE KEY UPDATE is used for atomicity.
         if ($first_id !== null && apm_validate_url($url)) {
-            $queue_db = new APM_Import_Queue_Database();
-            $queue_db->mark_as_imported_by_url($url, $first_id);
+            global $wpdb;
+            $queue_table = $wpdb->prefix . 'api_import_queue';
+            $domain      = parse_url($url, PHP_URL_HOST);
+            $is_first    = true;
+
+            foreach ($results as $result) {
+                if ($result['status'] !== 'imported') {
+                    continue;
+                }
+
+                $row_url = $is_first
+                    ? $url
+                    : $url . (strpos($url, '?') === false ? '?' : '&') . 'apm_sku=' . rawurlencode($result['sku']);
+
+                $wpdb->query(
+                    $wpdb->prepare(
+                        "INSERT INTO {$queue_table} (domain, product, url, product_id, error)
+                         VALUES (%s, %s, %s, %d, 0)
+                         ON DUPLICATE KEY UPDATE product_id = VALUES(product_id), product = VALUES(product)",
+                        $domain,
+                        $result['title'],
+                        $row_url,
+                        $result['product_id']
+                    )
+                );
+
+                $is_first = false;
+            }
         }
 
         delete_transient($cache_key);

@@ -203,19 +203,18 @@ jQuery(document).ready(function($) {
         $('#apm-import-result').show();
 
         var imported = results.filter(function(r) { return r.status === 'imported'; }).length;
+        var delay    = results.length > 1 ? 6000 : 2000;
+        var $msg     = $('#apm-import-message');
+
         showMessage(
-            $('#apm-import-message'),
+            $msg,
             imported > 0 ? 'success' : 'warning',
-            imported + ' of ' + results.length + ' product(s) imported successfully.' +
-            (results.length > 1 ? ' Review the results below, then reload the page to refresh the import queue.' : '')
+            imported + ' of ' + results.length + ' product(s) imported successfully. ' +
+            'Page will refresh in ' + (delay / 1000) + ' seconds to update the imported table\u2026'
         );
 
-        // For single imports reload automatically so queue counts refresh.
-        // For multi-product imports, leave the results table visible so the user
-        // can review all rows and their Edit/View links before navigating away.
-        if (results.length === 1) {
-            setTimeout(function() { location.reload(); }, 2000);
-        }
+        // Reload page so the import queue "Imported" table reflects all new products.
+        setTimeout(function() { location.reload(); }, delay);
     }
 
     // -------------------------------------------------------------------------
