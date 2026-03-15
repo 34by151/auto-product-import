@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Auto Product Import
  * Description: Automatically import products from external sources
- * Version: 2.2.2
+ * Version: 2.2.3
  * Author: Your Name
  * Text Domain: auto-product-import
  */
@@ -12,7 +12,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('APM_VERSION', '2.2.2');
+define('APM_VERSION', '2.2.3');
 define('APM_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('APM_PLUGIN_URL', plugin_dir_url(__FILE__));
 

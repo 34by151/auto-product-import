@@ -3,7 +3,7 @@
  * 
  * Handles single product import form
  * 
- * @version 2.2.2
+ * @version 2.2.3
  */
 
 jQuery(document).ready(function($) {

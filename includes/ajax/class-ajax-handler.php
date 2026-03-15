@@ -38,16 +38,30 @@ class APM_Ajax_Handler {
         }
         
         $scraper = new APM_Product_Scraper();
-        $product_data = $scraper->fetch($url);
-        
+
+        try {
+            $product_data = $scraper->fetch($url);
+        } catch (Exception $e) {
+            error_log('APM: Import failed with exception: ' . $e->getMessage());
+            wp_send_json_error(array('message' => $e->getMessage()));
+            return;
+        }
+
         if (is_wp_error($product_data)) {
             wp_send_json_error(array('message' => $product_data->get_error_message()));
             return;
         }
-        
+
         $creator = new APM_Product_Creator();
-        $product_id = $creator->create($product_data);
-        
+
+        try {
+            $product_id = $creator->create($product_data);
+        } catch (Exception $e) {
+            error_log('APM: Product creation failed with exception: ' . $e->getMessage());
+            wp_send_json_error(array('message' => $e->getMessage()));
+            return;
+        }
+
         if (is_wp_error($product_id)) {
             wp_send_json_error(array('message' => $product_id->get_error_message()));
             return;

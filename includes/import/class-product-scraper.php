@@ -167,23 +167,25 @@ class APM_Product_Scraper {
         );
         
         $response = wp_remote_get($url, $args);
-        
+
         if (is_wp_error($response)) {
-            if ($debug) {
-                error_log("APM: Error fetching URL: " . $response->get_error_message());
-            }
+            error_log("APM: Error fetching URL: " . $response->get_error_message() . " (URL: $url)");
             return false;
         }
-        
+
+        $response_code = wp_remote_retrieve_response_code($response);
+        if ($response_code < 200 || $response_code >= 300) {
+            error_log("APM: URL returned HTTP status $response_code (URL: $url)");
+            return false;
+        }
+
         $html = wp_remote_retrieve_body($response);
-        
+
         if (empty($html)) {
-            if ($debug) {
-                error_log("APM: Retrieved empty HTML content");
-            }
+            error_log("APM: Retrieved empty HTML content from: $url");
             return false;
         }
-        
+
         return $html;
     }
 }
