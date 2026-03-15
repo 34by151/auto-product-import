@@ -66,7 +66,12 @@ class APM_Ajax_Handler {
             wp_send_json_error(array('message' => $product_id->get_error_message()));
             return;
         }
-        
+
+        // Keep the import queue in sync: if this URL exists as a pending queue
+        // item, mark it as imported so the batch processor won't re-import it.
+        $queue_db = new APM_Import_Queue_Database();
+        $queue_db->mark_as_imported_by_url($url, $product_id);
+
         wp_send_json_success(array(
             'message' => __('Product imported successfully!', 'auto-product-import'),
             'product_id' => $product_id,

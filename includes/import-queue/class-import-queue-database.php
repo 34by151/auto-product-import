@@ -195,14 +195,14 @@ class APM_Import_Queue_Database {
     
     /**
      * Update product with product_id after successful import
-     * 
+     *
      * @param int $queue_id Queue item ID
      * @param int $product_id WordPress product ID
      * @return bool Success status
      */
     public function mark_as_imported($queue_id, $product_id) {
         global $wpdb;
-        
+
         $result = $wpdb->update(
             $this->table_name,
             array('product_id' => $product_id),
@@ -210,8 +210,31 @@ class APM_Import_Queue_Database {
             array('%d'),
             array('%d')
         );
-        
+
         return $result !== false;
+    }
+
+    /**
+     * Mark a queue item as imported by URL
+     * Used when a product is imported via the single import form so the
+     * queue stays in sync and the batch processor won't re-import it.
+     *
+     * @param string $url        The source URL that was imported
+     * @param int    $product_id The WordPress product ID that was created
+     * @return bool True if a queue row was updated, false if URL wasn't in the queue
+     */
+    public function mark_as_imported_by_url($url, $product_id) {
+        global $wpdb;
+
+        $result = $wpdb->update(
+            $this->table_name,
+            array('product_id' => $product_id),
+            array('url' => $url),
+            array('%d'),
+            array('%s')
+        );
+
+        return $result !== false && $result > 0;
     }
     
     /**
