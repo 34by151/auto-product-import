@@ -98,8 +98,17 @@ jQuery(document).ready(function($) {
         $('#apm-ewe-selection').hide();
     }
 
+    // Guard flag: prevents double-firing on rapid/repeated clicks
+    var eweImportInProgress = false;
+
     // Continue button: collect checked rows and POST to confirm endpoint
     $(document).on('click', '#apm-ewe-continue', function() {
+        // Hard guard against double-submission (event delegation can still fire
+        // on a disabled button in some browsers/jQuery versions)
+        if (eweImportInProgress) {
+            return;
+        }
+
         var $container = $('#apm-ewe-selection');
         var cacheKey   = $container.data('cache-key');
         var url        = $container.data('url');
@@ -121,6 +130,7 @@ jQuery(document).ready(function($) {
         var $btn      = $(this);
         var $progress = $('#apm-ewe-progress');
 
+        eweImportInProgress = true;
         $btn.prop('disabled', true);
         $progress.html('<span class="spinner is-active" style="float:none;margin-top:0;vertical-align:middle;"></span> Importing ' + selectedRows.length + ' product(s)…').show();
 
@@ -146,6 +156,7 @@ jQuery(document).ready(function($) {
                 showMessage($('#apm-import-message'), 'error', 'An error occurred during import. Please try again.');
             },
             complete: function() {
+                eweImportInProgress = false;
                 $btn.prop('disabled', false);
                 $progress.hide();
             }
@@ -195,11 +206,16 @@ jQuery(document).ready(function($) {
         showMessage(
             $('#apm-import-message'),
             imported > 0 ? 'success' : 'warning',
-            imported + ' of ' + results.length + ' product(s) imported successfully.'
+            imported + ' of ' + results.length + ' product(s) imported successfully.' +
+            (results.length > 1 ? ' Review the results below, then reload the page to refresh the import queue.' : '')
         );
 
-        // Reload after a short delay so queue counts stay in sync
-        setTimeout(function() { location.reload(); }, 3000);
+        // For single imports reload automatically so queue counts refresh.
+        // For multi-product imports, leave the results table visible so the user
+        // can review all rows and their Edit/View links before navigating away.
+        if (results.length === 1) {
+            setTimeout(function() { location.reload(); }, 2000);
+        }
     }
 
     // -------------------------------------------------------------------------

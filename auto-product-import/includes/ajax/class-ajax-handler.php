@@ -229,11 +229,33 @@ class APM_Ajax_Handler {
             return;
         }
 
+        // --- Atomic import lock ---------------------------------------------------
+        // INSERT IGNORE is enforced by the database unique key on option_name,
+        // guaranteeing only ONE parallel request can acquire this lock even under
+        // simultaneous execution (race condition prevention).
+        global $wpdb;
+        $lock_option = 'apm_ewe_lock_' . $cache_key;
+        $lock_acquired = $wpdb->query(
+            $wpdb->prepare(
+                "INSERT IGNORE INTO {$wpdb->options} (option_name, option_value, autoload) VALUES (%s, %s, 'no')",
+                $lock_option,
+                '1'
+            )
+        );
+
+        if ($lock_acquired === 0) {
+            // Another request already holds the lock for this import session
+            wp_send_json_error(array('message' => __('This import is already in progress. Please wait for it to complete.', 'auto-product-import')));
+            return;
+        }
+        // -------------------------------------------------------------------------
+
         // Retrieve cached page data
         $page_data = get_transient($cache_key);
         if (!$page_data) {
             // Cache expired: re-fetch the page
             if (!apm_validate_url($url)) {
+                delete_option($lock_option);
                 wp_send_json_error(array('message' => __('Session expired and URL is invalid. Please try again.', 'auto-product-import')));
                 return;
             }
@@ -243,14 +265,15 @@ class APM_Ajax_Handler {
                 $page_data = $fetched;
                 unset($page_data['eastwesteng_rows'], $page_data['html_content']);
             } catch (Exception $e) {
+                delete_option($lock_option);
                 wp_send_json_error(array('message' => __('Session expired. Please reload the page and try again.', 'auto-product-import')));
                 return;
             }
         }
 
-        $creator  = new APM_Product_Creator();
-        $results  = array();
-        $last_id  = null;
+        $creator   = new APM_Product_Creator();
+        $results   = array();
+        $first_id  = null; // first successfully imported product ID (for queue sync)
 
         foreach ($selected_rows as $row) {
             $sku   = isset($row['sku'])   ? sanitize_text_field($row['sku'])   : '';
@@ -298,7 +321,10 @@ class APM_Ajax_Handler {
                 continue;
             }
 
-            $last_id   = $product_id;
+            if ($first_id === null) {
+                $first_id = $product_id; // capture only the first success
+            }
+
             $results[] = array(
                 'sku'        => $sku,
                 'title'      => $title,
@@ -309,13 +335,15 @@ class APM_Ajax_Handler {
             );
         }
 
-        // Mark URL as done in the import queue (use last successfully created product)
-        if ($last_id && apm_validate_url($url)) {
+        // Mark URL as done in the import queue using the FIRST created product so
+        // the queue entry references a meaningful, consistently named product.
+        if ($first_id !== null && apm_validate_url($url)) {
             $queue_db = new APM_Import_Queue_Database();
-            $queue_db->mark_as_imported_by_url($url, $last_id);
+            $queue_db->mark_as_imported_by_url($url, $first_id);
         }
 
         delete_transient($cache_key);
+        delete_option($lock_option); // release lock
 
         wp_send_json_success(array(
             'results' => $results,
