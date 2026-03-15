@@ -154,4 +154,26 @@ class APM_Product_Creator_Sync_Fields {
         // BASIC LOGGING - Always show
         error_log("APM: Auto Product Sync fields set - URL saved, Sync enabled, Add GST: $add_gst");
     }
+
+    /**
+     * Apply hard-coded Auto Product Sync defaults for eastwesteng.com.au products
+     *
+     * Sets Add GST, Add Margin, and Margin Percentage meta fields.
+     * The price itself must be adjusted before calling this method (see APM_Product_Creator).
+     *
+     * @param int  $product_id Product ID
+     * @param bool $debug      Debug mode flag
+     */
+    public function apply_eastwesteng_defaults($product_id, $debug = false) {
+        update_post_meta($product_id, '_aps_add_gst', 'yes');
+        update_post_meta($product_id, '_aps_add_margin', 'yes');
+        update_post_meta($product_id, '_aps_margin_percentage', 15);
+
+        // BASIC LOGGING - Always show
+        error_log("APM: Applied eastwesteng.com.au defaults for product ID: $product_id (Add GST: yes, Add Margin: yes, Margin %: 15)");
+
+        if ($debug) {
+            error_log("APM: eastwesteng defaults — _aps_add_gst: yes, _aps_add_margin: yes, _aps_margin_percentage: 15");
+        }
+    }
 }
