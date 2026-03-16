@@ -331,13 +331,21 @@ class APM_Product_Creator {
         $category_name = $info['category_name'];
         error_log("APM: Domain category derivation — URL: {$source_url} → category name: \"{$category_name}\"");
 
-        // 1. Find "Uncategorised" (WooCommerce default, slug: uncategorized)
-        $uncategorised = get_term_by('slug', 'uncategorized', 'product_cat');
-        if (!$uncategorised) {
-            error_log("APM: WARNING — 'Uncategorised' product category not found. Cannot create domain category for URL: {$source_url}");
+        // 1. Find "Uncategorised" via WooCommerce's stored default category ID.
+        //    Using get_option() avoids slug/locale issues (e.g. 'uncategorised' vs 'uncategorized').
+        $uncategorised_id = (int) get_option('default_product_cat');
+        if (!$uncategorised_id) {
+            error_log("APM: WARNING — default_product_cat option not set. Cannot create domain category for URL: {$source_url}");
             return null;
         }
-        $uncategorised_id = (int) $uncategorised->term_id;
+        $uncategorised = get_term($uncategorised_id, 'product_cat');
+        if (!$uncategorised || is_wp_error($uncategorised)) {
+            error_log("APM: WARNING — default product category (ID: {$uncategorised_id}) not found in product_cat taxonomy. Cannot create domain category for URL: {$source_url}");
+            return null;
+        }
+        if ($debug) {
+            error_log("APM: Domain category — found default/Uncategorised category \"{$uncategorised->name}\" (ID: {$uncategorised_id}, slug: {$uncategorised->slug})");
+        }
 
         // 2. Find or create "Hidden" directly under Uncategorised
         $hidden_terms = get_terms(array(
