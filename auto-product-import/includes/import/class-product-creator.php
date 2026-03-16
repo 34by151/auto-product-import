@@ -85,16 +85,31 @@ class APM_Product_Creator {
             $product->set_short_description($product_data['short_description']);
         }
         
-        // Set category
-        if (!empty($default_category)) {
-            $product->set_category_ids(array($default_category));
-        }
-        
+        // Category is set after initial save (domain-based, see below)
+
         // Save product to get ID
         $product_id = $product->save();
-        
+
         if ($debug) {
             error_log("APM: Product created with ID: $product_id");
+        }
+
+        // Set domain-based category (replaces default category setting)
+        if (!empty($source_url)) {
+            $domain_cat_id = $this->get_or_create_domain_category($source_url, $debug);
+            if ($domain_cat_id) {
+                wp_set_object_terms($product_id, array($domain_cat_id), 'product_cat');
+            } elseif (!empty($default_category)) {
+                // Fallback to default category only if domain category creation fails
+                wp_set_object_terms($product_id, array((int) $default_category), 'product_cat');
+            }
+        } elseif (!empty($default_category)) {
+            wp_set_object_terms($product_id, array((int) $default_category), 'product_cat');
+        }
+
+        // Add domain-based product tag
+        if (!empty($source_url)) {
+            $this->add_domain_tag($product_id, $source_url, $debug);
         }
         
         // Set Auto Product Sync fields
@@ -256,6 +271,172 @@ class APM_Product_Creator {
         return $uploaded_pdf_ids;
     }
     
+    /**
+     * Extract domain-derived names from a source URL.
+     *
+     * Category name : first label of the domain (strips www. prefix and all
+     *                 TLD segments from the second-to-last dot onward).
+     *   e.g. www.eastwesteng.com.au  →  eastwesteng
+     *        supplier.com            →  supplier
+     *        example.co.uk           →  example
+     *
+     * Tag name      : full domain with www. prefix removed.
+     *   e.g. www.eastwesteng.com.au  →  eastwesteng.com.au
+     *
+     * @param  string $url Source URL
+     * @return array|null  Associative array with keys 'category_name', 'tag_name', 'domain', or null on failure
+     */
+    private function extract_domain_info($url) {
+        $host = parse_url($url, PHP_URL_HOST);
+        if (empty($host)) {
+            return null;
+        }
+
+        // Remove www. prefix
+        $domain = preg_replace('/^www\./i', '', $host);
+
+        // Tag: full domain without www
+        $tag_name = $domain;
+
+        // Category: first label only (everything before the first dot)
+        $parts         = explode('.', $domain);
+        $category_name = $parts[0];
+
+        return array(
+            'category_name' => $category_name,
+            'tag_name'      => $tag_name,
+            'domain'        => $domain,
+        );
+    }
+
+    /**
+     * Find or create the domain-based product category under:
+     *   Uncategorised > Hidden > [category_name]
+     *
+     * Auto-creates "Hidden" under "Uncategorised" if it doesn't exist.
+     *
+     * @param  string $source_url URL the product was imported from
+     * @param  bool   $debug
+     * @return int|null  Term ID of the domain category, or null on failure
+     */
+    private function get_or_create_domain_category($source_url, $debug = false) {
+        $info = $this->extract_domain_info($source_url);
+        if (!$info) {
+            if ($debug) {
+                error_log("APM: Domain category — could not parse host from URL: {$source_url}");
+            }
+            return null;
+        }
+
+        $category_name = $info['category_name'];
+        error_log("APM: Domain category derivation — URL: {$source_url} → category name: \"{$category_name}\"");
+
+        // 1. Find "Uncategorised" (WooCommerce default, slug: uncategorized)
+        $uncategorised = get_term_by('slug', 'uncategorized', 'product_cat');
+        if (!$uncategorised) {
+            error_log("APM: WARNING — 'Uncategorised' product category not found. Cannot create domain category for URL: {$source_url}");
+            return null;
+        }
+        $uncategorised_id = (int) $uncategorised->term_id;
+
+        // 2. Find or create "Hidden" directly under Uncategorised
+        $hidden_terms = get_terms(array(
+            'taxonomy'   => 'product_cat',
+            'name'       => 'Hidden',
+            'parent'     => $uncategorised_id,
+            'hide_empty' => false,
+            'number'     => 1,
+        ));
+
+        if (!empty($hidden_terms) && !is_wp_error($hidden_terms)) {
+            $hidden_id = (int) $hidden_terms[0]->term_id;
+            if ($debug) {
+                error_log("APM: Domain category — found existing 'Hidden' category (ID: {$hidden_id}) under 'Uncategorised'");
+            }
+        } else {
+            $result = wp_insert_term('Hidden', 'product_cat', array('parent' => $uncategorised_id));
+            if (is_wp_error($result)) {
+                error_log("APM: Domain category — failed to create 'Hidden' under 'Uncategorised': " . $result->get_error_message());
+                return null;
+            }
+            $hidden_id = (int) $result['term_id'];
+            error_log("APM: Domain category — created 'Hidden' category (ID: {$hidden_id}) under 'Uncategorised'");
+        }
+
+        // 3. Find or create domain category under Hidden
+        $domain_terms = get_terms(array(
+            'taxonomy'   => 'product_cat',
+            'name'       => $category_name,
+            'parent'     => $hidden_id,
+            'hide_empty' => false,
+            'number'     => 1,
+        ));
+
+        if (!empty($domain_terms) && !is_wp_error($domain_terms)) {
+            $domain_cat_id = (int) $domain_terms[0]->term_id;
+            if ($debug) {
+                error_log("APM: Domain category — found existing category \"{$category_name}\" (ID: {$domain_cat_id}) under 'Hidden'");
+            }
+        } else {
+            $result = wp_insert_term($category_name, 'product_cat', array('parent' => $hidden_id));
+            if (is_wp_error($result)) {
+                error_log("APM: Domain category — failed to create \"{$category_name}\" under 'Hidden': " . $result->get_error_message());
+                return null;
+            }
+            $domain_cat_id = (int) $result['term_id'];
+            error_log("APM: Domain category — created category \"{$category_name}\" (ID: {$domain_cat_id}) under Uncategorised > Hidden");
+        }
+
+        return $domain_cat_id;
+    }
+
+    /**
+     * Find or create a domain-based product tag and attach it to the product.
+     *
+     * Tag is the domain name with the www. prefix removed.
+     *   e.g. www.eastwesteng.com.au  →  tag: "eastwesteng.com.au"
+     *
+     * @param int    $product_id
+     * @param string $source_url URL the product was imported from
+     * @param bool   $debug
+     */
+    private function add_domain_tag($product_id, $source_url, $debug = false) {
+        $info = $this->extract_domain_info($source_url);
+        if (!$info) {
+            if ($debug) {
+                error_log("APM: Domain tag — could not parse host from URL: {$source_url}");
+            }
+            return;
+        }
+
+        $tag_name = $info['tag_name'];
+        error_log("APM: Domain tag derivation — URL: {$source_url} → tag name: \"{$tag_name}\"");
+
+        // Find or create the tag
+        $existing = get_term_by('name', $tag_name, 'product_tag');
+        if ($existing && !is_wp_error($existing)) {
+            $tag_id = (int) $existing->term_id;
+            if ($debug) {
+                error_log("APM: Domain tag — found existing tag \"{$tag_name}\" (ID: {$tag_id})");
+            }
+        } else {
+            $result = wp_insert_term($tag_name, 'product_tag');
+            if (is_wp_error($result)) {
+                error_log("APM: Domain tag — failed to create tag \"{$tag_name}\": " . $result->get_error_message());
+                return;
+            }
+            $tag_id = (int) $result['term_id'];
+            error_log("APM: Domain tag — created tag \"{$tag_name}\" (ID: {$tag_id})");
+        }
+
+        // Append tag to product (true = append, don't replace existing tags)
+        wp_set_object_terms($product_id, array($tag_id), 'product_tag', true);
+
+        if ($debug) {
+            error_log("APM: Domain tag — attached tag \"{$tag_name}\" (ID: {$tag_id}) to product {$product_id}");
+        }
+    }
+
     /**
      * Create Specifications tab for product
      *
