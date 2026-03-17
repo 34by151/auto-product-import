@@ -1,6 +1,6 @@
 # Auto Product Import
 
-Version: 2.2.3
+Version: 2.2.5
 
 ## Description
 
@@ -10,6 +10,10 @@ Auto Product Import is a WordPress plugin that allows administrators to import p
 
 - Import products from any URL with just one click
 - Automatically extract product title, description, price, and images
+- **NEW in v2.2.5: Automatic domain-based product category assignment** — products are placed under `Uncategorised > Hidden > [domain]` derived from the source URL
+- **NEW in v2.2.5: Automatic domain-based product tag** — tags each imported product with the source domain (e.g. `eastwesteng.com.au`)
+- **NEW in v2.2.5: eastwesteng.com.au import defaults** — automatically applies 15% margin and GST/margin sync fields on creation
+- **NEW in v2.2.4: Batch import queue fixes** — prevents duplicate product creation via atomic DB lock; all imported products visible in queue table with individual Edit/View links
 - **NEW in v2.1.4: SKU extraction with site-specific logic**
 - **NEW in v2.1.4: Automatic GST calculation (10%) when "excl GST" detected**
 - **NEW in v2.1.4: Duplicate SKU detection with fallback generation**
@@ -64,7 +68,7 @@ Note: Although this plugin imports products (not orders), HPOS compatibility dec
 
 Navigate to **Auto Product Import > Settings** to configure:
 
-1. **Default Product Category**: Choose which category imported products should be assigned to
+1. **Default Product Category**: Fallback category if domain-based category creation fails (normally products are auto-categorised by source domain — see below)
 2. **Default Product Status**: Set whether new products are created as Draft or Published
 3. **Maximum Images to Import**: Limit the number of images imported per product (1-100)
 4. **Maximum PDF Size (MB)**: Set the maximum file size for PDF uploads (1-100 MB)
@@ -90,6 +94,8 @@ Navigate to **Auto Product Import > Settings** to configure:
    - Download and attach product PDFs
    - Apply GST calculation if "excl GST" is detected
    - Set Auto Product Sync fields (URL saved, sync disabled)
+   - Assign the product to a domain-derived category (`Uncategorised > Hidden > [domain]`)
+   - Tag the product with the source domain (e.g. `eastwesteng.com.au`)
    - Create the product in WooCommerce
 
 ### Frontend Shortcode
@@ -230,7 +236,9 @@ auto-product-import/
 7. **SKU Validation**: Checks for duplicates and generates fallback if needed
 8. **Media Upload**: Downloads and processes images and PDFs
 9. **Product Creation**: Creates WooCommerce product with all extracted data
-10. **Auto Product Sync Setup**: Configures sync fields for future updates
+10. **Domain Category Assignment**: Derives a category name from the source URL (strips `www.` and TLD suffix), then finds or creates the `Uncategorised > Hidden > [domain]` hierarchy and assigns the product to it
+11. **Domain Tag Assignment**: Tags the product with the source domain minus the `www.` prefix (e.g. `eastwesteng.com.au`)
+12. **Auto Product Sync Setup**: Configures sync fields for future updates
 
 ## Troubleshooting
 
@@ -265,7 +273,57 @@ auto-product-import/
 - Enable debug logging to see extraction attempts
 - Check if GST was correctly applied to the price
 
+## Domain Category & Tag Assignment
+
+Every imported product is automatically categorised and tagged based on its source URL. No configuration is required.
+
+### Category
+
+The plugin derives a category name from the domain by stripping the `www.` prefix and everything from the second-to-last dot onward:
+
+| Source URL | Derived category |
+|---|---|
+| `https://www.eastwesteng.com.au/...` | `eastwesteng` |
+| `https://supplier.com/...` | `supplier` |
+| `https://www.example.co.uk/...` | `example` |
+
+The category is placed in the hierarchy **Uncategorised > Hidden > [domain]**. If the `Hidden` intermediate category does not exist, it is created automatically under `Uncategorised`. The product is assigned only to the domain category — it is not placed in `Uncategorised`.
+
+### Tag
+
+The tag is the full domain with the `www.` prefix removed:
+
+| Source URL | Tag |
+|---|---|
+| `https://www.eastwesteng.com.au/...` | `eastwesteng.com.au` |
+| `https://supplier.com/...` | `supplier.com` |
+
+### Logging
+
+The following lines are always written to `debug.log` for every import:
+
+```
+APM: Domain category derivation — URL: [url] → category name: "[name]"
+APM: Domain tag derivation — URL: [url] → tag name: "[name]"
+```
+
+With detailed logging enabled, additional lines confirm whether each term was found or newly created, along with its term ID.
+
+---
+
 ## Changelog
+
+### Version 2.2.5 (2026-03-16)
+- Added: Automatic domain-based product category assignment — derives category name from source URL and places product under `Uncategorised > Hidden > [domain]`, auto-creating the hierarchy as needed
+- Added: Automatic domain-based product tag — tags each product with the source domain (e.g. `eastwesteng.com.au`)
+- Added: eastwesteng.com.au import defaults — skips double-GST on creation, applies 15% margin, and sets `Add GST`, `Add Margin`, and `Margin %` sync fields automatically
+- Fixed: Domain category lookup now uses `get_option('default_product_cat')` instead of a hardcoded slug, resolving failures on non-US WordPress installs (e.g. Australian sites using slug `uncategorised`)
+
+### Version 2.2.4 (2026-03-15)
+- Fixed: Duplicate product creation during concurrent batch imports — atomic `INSERT IGNORE` DB lock ensures only one request can process a given import session
+- Fixed: JS-level double-submission guard added for the eastwesteng multi-product confirm step
+- Fixed: Batch import queue table now shows all imported products with individual Edit/View links, not just one per source URL — additional products keyed by `{url}?apm_sku={sku}`
+- Fixed: Auto-reload after multi-product import now waits 6 seconds with a countdown so the per-row results table can be reviewed before the page refreshes
 
 ### Version 2.2.3 (2026-03-15)
 - Fixed: Import failure showing generic "An error occurred" with no debug log entries — AJAX handler now catches PHP exceptions and returns the actual error message to the UI
