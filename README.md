@@ -1,6 +1,6 @@
 # Auto Product Import
 
-Version: 2.2.5
+Version: 2.2.6
 
 ## Description
 
@@ -312,6 +312,11 @@ With detailed logging enabled, additional lines confirm whether each term was fo
 ---
 
 ## Changelog
+
+### Version 2.2.6 (2026-03-19)
+- Performance: All admin-only PHP classes (26 files) are now skipped on frontend page loads via `is_admin()` guard — eliminates unnecessary file parsing on the homepage and all other frontend pages
+- Removed: `apm_enqueue_dashicons()` — was loading the dashicons stylesheet on every frontend page; the Documents tab it supported was removed in v2.2.2 making this dead code
+- Removed: `apm_documents_tab_css()` — dead code left over from the Documents tab removal in v2.2.2
 
 ### Version 2.2.5 (2026-03-16)
 - Added: Automatic domain-based product category assignment — derives category name from source URL and places product under `Uncategorised > Hidden > [domain]`, auto-creating the hierarchy as needed

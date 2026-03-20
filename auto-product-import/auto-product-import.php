@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Auto Product Import
  * Description: Automatically import products from external sources
- * Version: 2.2.5
+ * Version: 2.2.6
  * Author: Your Name
  * Text Domain: auto-product-import
  */
@@ -12,82 +12,86 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('APM_VERSION', '2.2.5');
+define('APM_VERSION', '2.2.6');
 define('APM_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('APM_PLUGIN_URL', plugin_dir_url(__FILE__));
 
-// Include helper functions
+// Include helper functions (always needed)
 require_once APM_PLUGIN_DIR . 'includes/helpers/functions-dom.php';
 require_once APM_PLUGIN_DIR . 'includes/helpers/functions-url.php';
 require_once APM_PLUGIN_DIR . 'includes/helpers/functions-validation.php';
 
-// Include admin classes
-require_once APM_PLUGIN_DIR . 'includes/admin/class-admin-menu.php';
-require_once APM_PLUGIN_DIR . 'includes/admin/class-settings-handler.php';
-require_once APM_PLUGIN_DIR . 'includes/admin/class-template-data.php';
+// Include admin-only classes — skipped on frontend to avoid unnecessary file parsing
+if ( is_admin() ) {
 
-// Include AJAX handlers
-require_once APM_PLUGIN_DIR . 'includes/ajax/class-ajax-handler.php';
-require_once APM_PLUGIN_DIR . 'includes/ajax/class-import-queue-ajax-handler.php';
+    // Admin classes
+    require_once APM_PLUGIN_DIR . 'includes/admin/class-admin-menu.php';
+    require_once APM_PLUGIN_DIR . 'includes/admin/class-settings-handler.php';
+    require_once APM_PLUGIN_DIR . 'includes/admin/class-template-data.php';
 
-// Include import classes - Core
-require_once APM_PLUGIN_DIR . 'includes/import/class-html-parser.php';
-require_once APM_PLUGIN_DIR . 'includes/import/class-product-scraper.php';
-require_once APM_PLUGIN_DIR . 'includes/import/class-product-scraper-extractors.php';
-require_once APM_PLUGIN_DIR . 'includes/import/class-product-scraper-sku.php';
+    // AJAX handlers
+    require_once APM_PLUGIN_DIR . 'includes/ajax/class-ajax-handler.php';
+    require_once APM_PLUGIN_DIR . 'includes/ajax/class-import-queue-ajax-handler.php';
 
-// Include import classes - Extractors
-require_once APM_PLUGIN_DIR . 'includes/import/class-eastwesteng-extractor.php';
-require_once APM_PLUGIN_DIR . 'includes/import/class-bigcommerce-extractor.php';
-require_once APM_PLUGIN_DIR . 'includes/import/class-shopify-extractor.php';
-require_once APM_PLUGIN_DIR . 'includes/import/class-description-extractor.php';
-require_once APM_PLUGIN_DIR . 'includes/import/class-description-extractor-additional-info.php';
-require_once APM_PLUGIN_DIR . 'includes/import/class-specifications-extractor.php';
-require_once APM_PLUGIN_DIR . 'includes/import/class-specifications-extractor-shopify.php';
-require_once APM_PLUGIN_DIR . 'includes/import/class-specifications-extractor-magento.php';
-require_once APM_PLUGIN_DIR . 'includes/import/class-image-extractor.php';
-require_once APM_PLUGIN_DIR . 'includes/import/class-pdf-extractor.php';
-require_once APM_PLUGIN_DIR . 'includes/import/class-pdf-extractor-html-parser.php';
-require_once APM_PLUGIN_DIR . 'includes/import/class-pdf-extractor-js-parser.php';
-require_once APM_PLUGIN_DIR . 'includes/import/class-pdf-extractor-validator.php';
+    // Import classes - Core
+    require_once APM_PLUGIN_DIR . 'includes/import/class-html-parser.php';
+    require_once APM_PLUGIN_DIR . 'includes/import/class-product-scraper.php';
+    require_once APM_PLUGIN_DIR . 'includes/import/class-product-scraper-extractors.php';
+    require_once APM_PLUGIN_DIR . 'includes/import/class-product-scraper-sku.php';
 
-// Include import classes - Uploaders
-require_once APM_PLUGIN_DIR . 'includes/import/class-image-uploader.php';
-require_once APM_PLUGIN_DIR . 'includes/import/class-pdf-uploader.php';
+    // Import classes - Extractors
+    require_once APM_PLUGIN_DIR . 'includes/import/class-eastwesteng-extractor.php';
+    require_once APM_PLUGIN_DIR . 'includes/import/class-bigcommerce-extractor.php';
+    require_once APM_PLUGIN_DIR . 'includes/import/class-shopify-extractor.php';
+    require_once APM_PLUGIN_DIR . 'includes/import/class-description-extractor.php';
+    require_once APM_PLUGIN_DIR . 'includes/import/class-description-extractor-additional-info.php';
+    require_once APM_PLUGIN_DIR . 'includes/import/class-specifications-extractor.php';
+    require_once APM_PLUGIN_DIR . 'includes/import/class-specifications-extractor-shopify.php';
+    require_once APM_PLUGIN_DIR . 'includes/import/class-specifications-extractor-magento.php';
+    require_once APM_PLUGIN_DIR . 'includes/import/class-image-extractor.php';
+    require_once APM_PLUGIN_DIR . 'includes/import/class-pdf-extractor.php';
+    require_once APM_PLUGIN_DIR . 'includes/import/class-pdf-extractor-html-parser.php';
+    require_once APM_PLUGIN_DIR . 'includes/import/class-pdf-extractor-js-parser.php';
+    require_once APM_PLUGIN_DIR . 'includes/import/class-pdf-extractor-validator.php';
 
-// Include import classes - Product Creation
-require_once APM_PLUGIN_DIR . 'includes/import/class-product-creator.php';
-require_once APM_PLUGIN_DIR . 'includes/import/class-product-creator-sync-fields.php';
-require_once APM_PLUGIN_DIR . 'includes/import/class-specifications-tab-creator.php';
-// Documents tab creator removed in v2.2.2 - file deleted
+    // Import classes - Uploaders
+    require_once APM_PLUGIN_DIR . 'includes/import/class-image-uploader.php';
+    require_once APM_PLUGIN_DIR . 'includes/import/class-pdf-uploader.php';
 
-// Include import queue classes
-require_once APM_PLUGIN_DIR . 'includes/import-queue/class-import-queue-database.php';
-require_once APM_PLUGIN_DIR . 'includes/import-queue/class-import-queue-batch-processor.php';
-require_once APM_PLUGIN_DIR . 'includes/import-queue/class-import-queue-table-renderer.php';
-require_once APM_PLUGIN_DIR . 'includes/import-queue/class-import-queue-manager.php';
+    // Import classes - Product Creation
+    require_once APM_PLUGIN_DIR . 'includes/import/class-product-creator.php';
+    require_once APM_PLUGIN_DIR . 'includes/import/class-product-creator-sync-fields.php';
+    require_once APM_PLUGIN_DIR . 'includes/import/class-specifications-tab-creator.php';
+    // Documents tab creator removed in v2.2.2 - file deleted
+
+    // Import queue classes
+    require_once APM_PLUGIN_DIR . 'includes/import-queue/class-import-queue-database.php';
+    require_once APM_PLUGIN_DIR . 'includes/import-queue/class-import-queue-batch-processor.php';
+    require_once APM_PLUGIN_DIR . 'includes/import-queue/class-import-queue-table-renderer.php';
+    require_once APM_PLUGIN_DIR . 'includes/import-queue/class-import-queue-manager.php';
+
+}
 
 /**
  * Initialize the plugin
  */
 function apm_init() {
-    // Initialize settings handler (must run on admin_init)
-    $settings_handler = new APM_Settings_Handler();
-    $settings_handler->init();
-    
-    // Initialize admin interface
     if (is_admin()) {
+        // Initialize settings handler (admin_init only)
+        $settings_handler = new APM_Settings_Handler();
+        $settings_handler->init();
+
         $admin_menu = new APM_Admin_Menu();
-        $admin_menu->init(); // CALL THE INIT METHOD
-        
+        $admin_menu->init();
+
         $ajax_handler = new APM_Ajax_Handler();
         $ajax_handler->init();
-        
+
         // Initialize import queue manager
         $queue_manager = new APM_Import_Queue_Manager();
         $queue_manager->init();
     }
-    
+
     // NOTE: Documents Tab Creator initialization removed in v2.2.2
     // PDFs still uploaded to media library but no Documents tab created
 }
@@ -157,49 +161,6 @@ function apm_enqueue_scripts($hook) {
     ));
 }
 add_action('admin_enqueue_scripts', 'apm_enqueue_scripts');
-
-/**
- * Add dashicons support on frontend for Documents tab
- */
-function apm_enqueue_dashicons() {
-    wp_enqueue_style('dashicons');
-}
-add_action('wp_enqueue_scripts', 'apm_enqueue_dashicons');
-
-/**
- * Add custom CSS for Documents tab
- */
-function apm_documents_tab_css() {
-    if (!is_product()) {
-        return;
-    }
-    ?>
-    <style>
-        .woocommerce-product-documents p {
-            margin: 10px 0;
-        }
-        .woocommerce-product-documents a {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            text-decoration: none;
-            color: #2271b1;
-            font-size: 14px;
-            transition: color 0.2s;
-        }
-        .woocommerce-product-documents a:hover {
-            color: #135e96;
-            text-decoration: underline;
-        }
-        .woocommerce-product-documents .dashicons {
-            font-size: 18px;
-            width: 18px;
-            height: 18px;
-        }
-    </style>
-    <?php
-}
-add_action('wp_head', 'apm_documents_tab_css');
 
 /**
  * Log function for debugging
